@@ -1,36 +1,3 @@
-
-Skip to content
-Pull requests
-Issues
-Marketplace
-Explore
-@mnopqr1
-mnopqr1 /
-JackSyntaxAnalyzer
-
-1
-0
-
-    0
-
-Code
-Issues
-Pull requests
-Actions
-Projects
-Wiki
-Security
-Insights
-
-    Settings
-
-JackSyntaxAnalyzer/.gitignore
-@mnopqr1
-mnopqr1 Initial commit
-Latest commit 76674d4 15 seconds ago
-History
-1 contributor
-129 lines (105 sloc) 1.76 KB
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -160,19 +127,5 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
-
-    © 2021 GitHub, Inc.
-    Terms
-    Privacy
-    Security
-    Status
-    Docs
-
-    Contact GitHub
-    Pricing
-    API
-    Training
-    Blog
-    About
 
 .pdf
