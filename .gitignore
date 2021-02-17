@@ -129,6 +129,3 @@ dmypy.json
 .pyre/
 
 *.pdf
-
-# test output
-Main.xml
