@@ -14,13 +14,12 @@ class Token:
     @classmethod
     def from_content(cls, content):
         if content in JACK_KEYWORDS:
-            token_type = "KEYWORD"
-            content = content.upper()
+            token_type = "keyword"
         elif content[0].isdigit():
-            token_type = "INT_CONST"
+            token_type = "int_const"
             content = int(content)
         else:
-            token_type = "IDENTIFIER"
+            token_type = "identifier"
             content = content
         return cls(token_type, content)
     

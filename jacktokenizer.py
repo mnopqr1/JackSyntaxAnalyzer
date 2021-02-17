@@ -22,9 +22,9 @@ class JackTokenizer:
         while True:
             char = self.file.read(1)
             if char == '':  # reached EOF while seeking end
-                print(f"Syntax error: end of file reached while parsing multiline comment started on line {current_comment_start_line}")
+                print(f"Parsing error: end of file reached while parsing multiline comment started on line {current_comment_start_line}")
             if char == '\n': 
-                current_line += 1
+                self.current_line += 1
                 continue
             if char == '*':
                 if self.file.read(1) == '/':
@@ -76,7 +76,7 @@ class JackTokenizer:
             return
         
         if firstchar in JACK_SYMBOLS:   # return immediately if found a symbol
-            self.next_token = Token("SYMBOL", firstchar)
+            self.next_token = Token("symbol", firstchar)
             return
         
         new_token_content = ""
@@ -91,11 +91,11 @@ class JackTokenizer:
             lastpos = self.file.tell()
             char = self.file.read(1)
             if char == "\n":  # keep track of the line-count
-                current_line += 1
+                self.current_line += 1
             
             if is_string: # if we are in a string, continue reading unless we see the closing "
                 if char == "\"":
-                    self.next_token = Token("STRING_CONST", new_token_content)
+                    self.next_token = Token("string_const", new_token_content)
                     break
                 else:
                     new_token_content += char
@@ -108,7 +108,7 @@ class JackTokenizer:
                     new_token_content += char
 
         if self.next_token == None:    
-            print("Syntax error: reached end of file while parsing token " + new_token_content)
+            print("Parsing error: reached end of file while parsing token " + new_token_content)
             exit(0)
 
         return
@@ -135,25 +135,19 @@ class JackTokenizer:
         self.find_next_token()
         return
     
-    def token_type(self):
-        return current_token.token_type
-    
-    def keyword(self):
-        assert current_token.token_type == "KEYWORD"
-        return current_token.content
-    
-    def symbol(self):
-        assert current_token.token_type == "SYMBOL"
-        return current_token.content
-    
-    def identifier(self):
-        assert current_token.token_type == "IDENTIFIER"
-        return current_token.content
+    def ttype(self):
+        assert self.current_token != None
+        return self.current_token.token_type
 
-    def int_val(self):
-        assert current_token.token_type == "INT_CONST"
-        return current_token.content
+    def content(self):
+        assert self.current_token != None
+        return self.current_token.content
+
+    def next_ttype(self):
+        return self.next_token.token_type
     
-    def string_val(self):
-        assert current_token.token_type == "STRING_CONST"
-        return current_token.content
+    def next_content(self):
+        return self.next_token.content
+
+
+    
