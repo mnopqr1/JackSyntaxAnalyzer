@@ -2,7 +2,7 @@ from jacktokenizer import JackTokenizer
 
 JACK_SUBROUTINE_NAMES = ["constructor", "function", "method"]
 JACK_STATEMENT_KEYWORDS = ["if", "let", "while", "do", "return"]
-INDENT_SIZE = 3
+INDENT_SIZE = 2
 
 
 class CompilationEngine:
@@ -12,30 +12,37 @@ class CompilationEngine:
         self.outfile = open(self.outfilename, 'w')
         self.current_level = 0
     
-    def write_open(self, tagname):
+    def opentag(self, tagname):
         self.outfile.write(" " * self.current_level * INDENT_SIZE + "<" + tagname + ">" + "\n")
         self.current_level += 1
 
-    def write_close(self, tagname):
+    def closetag(self, tagname):
         self.current_level -= 1
         self.outfile.write(" " * self.current_level * INDENT_SIZE + "</" + tagname + ">" + "\n")
-        
+    
+    def get_assertion_err(self, s):
+        return "while writing " + self.outfilename + \
+        ", expected token " + s + \
+        ", but found token " + \
+        self.tokenizer.next_content() + \
+        " on line " + str(self.tokenizer.current_line)
+
+    def eat(self, s):
+        for word in s.split(" "):
+            assert self.tokenizer.next_content() == word, get_assertion_err(word)
+            self.next_terminals(1)
 
     def write_terminal(self, ttype, content):
         self.outfile.write(" " * self.current_level * INDENT_SIZE + "<" + ttype + "> " + content + " </" + ttype + ">" + "\n")
 
-    def write_next_terminals(self, n):
+    def next_terminals(self, n):
         for i in range(0,n):
             self.tokenizer.advance()
             self.write_terminal(self.tokenizer.ttype(), self.tokenizer.content())
-            
-
-    def write_class_end(self):
-        pass
 
     def compile_class(self):
-        self.write_open("class")
-        self.write_next_terminals(3) # class initialization consists of "class", "name", "{"
+        self.opentag("class")
+        self.next_terminals(3) # class initialization consists of "class", "name", "{"
         
         # the class variable declarations run until either the closing '}' of the class,
         # or the first time we see a subroutine declaration.
@@ -48,58 +55,58 @@ class CompilationEngine:
         while self.tokenizer.next_content() != '}':
             self.compile_subroutine_dec()
 
-        self.write_next_terminals(1) # write the closing } symbol
-        self.write_close("class")
+        self.next_terminals(1) # write the closing } symbol
+        self.closetag("class")
 
     def compile_class_var_dec(self):
         assert self.tokenizer.next_content() == "static" or self.tokenizer.next_content() == "field"
-        self.write_open("classVarDec")
+        self.opentag("classVarDec")
         
-        self.write_next_terminals(3)  # write the static or field, type declaration, identifier name
+        self.next_terminals(3)  # write the static or field, type declaration, identifier name
         while (self.tokenizer.next_content() == ","):
-            self.now_write(",")
-            self.write_next_terminals(1)
+            self.eat(",")
+            self.next_terminals(1)
         
-        self.now_write(";")
+        self.eat(";")
         
-        self.write_close("classVarDec")
+        self.closetag("classVarDec")
 
     def compile_subroutine_dec(self):
-        self.write_open("subroutineDec")
-        self.write_next_terminals(4) # write subroutine type, return type, name, and ( for parameter list
+        self.opentag("subroutineDec")
+        self.next_terminals(4) # write subroutine type, return type, name, and ( for parameter list
         self.compile_parameter_list()
-        self.write_next_terminals(1)  # closing ) of parameter list
+        self.next_terminals(1)  # closing ) of parameter list
 
-        self.write_open("subroutineBody")
-        self.write_next_terminals(1)  # opening { for subroutine
+        self.opentag("subroutineBody")
+        self.next_terminals(1)  # opening { for subroutine
         while (self.tokenizer.next_content() not in JACK_STATEMENT_KEYWORDS):
             self.compile_var_dec()
-        self.write_open("statements")
+        self.opentag("statements")
         while (self.tokenizer.next_content() != '}'):
             self.compile_statement()
-        self.write_close("statements")
-        self.write_next_terminals(1) # closing } for subroutine
-        self.write_close("subroutineBody")
+        self.closetag("statements")
+        self.next_terminals(1) # closing } for subroutine
+        self.closetag("subroutineBody")
 
-        self.write_close("subroutineDec")
+        self.closetag("subroutineDec")
 
     def compile_parameter_list(self):
-        self.write_open("parameterList")
+        self.opentag("parameterList")
         while self.tokenizer.next_content() != ')':
-            self.write_next_terminals(2) # write the variable type and name
+            self.next_terminals(2) # write the variable type and name
             if self.tokenizer.next_content == ')':
-                self.write_next_terminals(1) # write the comma if it is there
-        self.write_close("parameterList")
+                self.next_terminals(1) # write the comma if it is there
+        self.closetag("parameterList")
 
     def compile_var_dec(self):
-        self.write_open("varDec")
-        self.now_write("var")
-        self.write_next_terminals(2) # write the var keyword, type name and first declared var name
+        self.opentag("varDec")
+        self.eat("var")
+        self.next_terminals(2) # write type name and first declared var name
 
         while (self.tokenizer.next_content() != ';'):
-            self.write_next_terminals(2) # write the comma and next variable name
-        self.write_next_terminals(1) # write the end of line semicolon
-        self.write_close("varDec")
+            self.next_terminals(2) # write the comma and next variable name
+        self.next_terminals(1) # write the end of line semicolon
+        self.closetag("varDec")
 
     
     def compile_statement(self):
@@ -115,110 +122,99 @@ class CompilationEngine:
             self.compile_if_statement()
         if statement_type == "return":
             self.compile_return_statement()
-    
-    def get_assertion_err(self, s):
-        return "while writing " + self.outfilename + \
-        ", expected token " + s + \
-        ", but found token " + \
-        self.tokenizer.next_content() + \
-        " on line " + str(self.tokenizer.current_line)
-
-    def now_write(self, s):
-        assert self.tokenizer.next_content() == s, get_assertion_err(s)
-        self.write_next_terminals(1)
 
     def compile_let_statement(self):
-        self.write_open("letStatement")
-        self.now_write("let") 
-        self.write_next_terminals(1) # write var name
+        self.opentag("letStatement")
+        self.eat("let") 
+        self.next_terminals(1) # write var name
         if self.tokenizer.next_content() == '[':
-            self.now_write('[')
+            self.eat('[')
             self.compile_expression()
-            self.now_write(']')
+            self.eat(']')
 
-        self.now_write('=')
+        self.eat('=')
         self.compile_expression()
         
-        self.now_write(';')
+        self.eat(';')
 
-        self.write_close("letStatement")
+        self.closetag("letStatement")
 
     def compile_if_statement(self):
-        self.write_open("ifStatement")
-        self.now_write("if")
-        self.now_write("(")
+        self.opentag("ifStatement")
+        self.eat("if")
+        self.eat("(")
         self.compile_expression()
-        self.now_write(")")
-        self.now_write("{")
+        self.eat(")")
+        self.eat("{")
         self.compile_statements()
-        self.now_write("}")
+        self.eat("}")
         if self.tokenizer.next_content() == "else":
-            self.now_write("else")
-            self.now_write("{")
+            self.eat("else")
+            self.eat("{")
             self.compile_statements()
-            self.now_write("}")
-        self.write_close("ifStatement")
+            self.eat("}")
+        self.closetag("ifStatement")
 
     def compile_do_statement(self):
-        self.write_open("doStatement")
-        self.now_write("do")
+        self.opentag("doStatement")
+        self.eat("do")
         self.compile_subroutine_call()
-        self.now_write(";")
-        self.write_close("doStatement")
+        self.eat(";")
+        self.closetag("doStatement")
 
     def compile_subroutine_call(self):
         # subroutine call is not encapsulated in tag (not sure why...)
-        self.write_next_terminals(1) # write identifier: subroutineName or className or varName
+        self.next_terminals(1) # write identifier: subroutineName or className or varName
         if self.tokenizer.next_content() == '.': 
-            self.now_write(".")
-            self.write_next_terminals(1) # write the true subroutineName
-        self.now_write("(")
+            self.eat(".")
+            self.next_terminals(1) # write the true subroutineName
+        self.eat("(")
         self.compile_expression_list()
-        self.now_write(")")
+        self.eat(")")
 
     
     def compile_expression_list(self):
-        self.write_open("expressionList")
+        self.opentag("expressionList")
         while self.tokenizer.next_content() != ')':
             self.compile_expression()
             if self.tokenizer.next_content() == ',':
-                self.now_write(",")
-        self.write_close("expressionList")
+                self.eat(",")
+        self.closetag("expressionList")
 
     def compile_while_statement(self):
-        self.write_open("whileStatement")
-        self.now_write("while")
-        self.now_write("(")
+        self.opentag("whileStatement")
+        self.eat("while")
+        self.eat("(")
         self.compile_expression()
-        self.now_write(")")
-        self.now_write("{")
+        self.eat(")")
+        self.eat("{")
         self.compile_statements()
-        self.now_write("}")
-        self.write_close("whileStatement")
+        self.eat("}")
+        self.closetag("whileStatement")
 
     def compile_statements(self):
-        self.write_open("statements")
+        self.opentag("statements")
         while self.tokenizer.next_content() != '}':
             self.compile_statement()
-        self.write_close("statements")
+        self.closetag("statements")
 
     def compile_return_statement(self):
-        self.write_open("returnStatement")
-        self.now_write("return")
+        self.opentag("returnStatement")
+        self.eat("return")
         if self.tokenizer.next_content() != ";":
             self.compile_expression()
-        self.now_write(";")
-        self.write_close("returnStatement")
+        self.eat(";")
+        self.closetag("returnStatement")
 
     def compile_expression(self):
-        self.write_open("expression")
+        self.opentag("expression")
         
         # expression is non-empty list of terms but for now it is just one term
         self.compile_term()
 
-        self.write_close("expression")
+        self.closetag("expression")
     
     def compile_term(self):
-        self.write_open("term")
-        self.write_next_terminals(1)  # a term is just a single terminal for now
-        self.write_close("term")
+        self.opentag("term")
+        self.next_terminals(1)  # a term is just a single terminal for now
+        self.closetag("term")
