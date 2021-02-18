@@ -16,12 +16,13 @@ class Token:
         if content in JACK_KEYWORDS:
             token_type = "keyword"
         elif content[0].isdigit():
-            token_type = "int_const"
-            content = int(content)
+            token_type = "integerConstant"
         else:
             token_type = "identifier"
-            content = content
         return cls(token_type, content)
     
     def to_string(self):
         return "<" + self.token_type + ">" + self.content + "</" + self.token_type + ">"
+    
+    def is_constant(self):
+        return self.token_type in ["integerConstant", "stringConstant", "keyword"] 

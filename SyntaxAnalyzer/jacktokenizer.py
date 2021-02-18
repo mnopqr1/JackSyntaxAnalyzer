@@ -1,8 +1,9 @@
 import os
 from jacktoken import Token
 
-JACK_SYMBOLS = "\{\}()\[\].,;+-*/&|<>=-"
+JACK_SYMBOLS = "\{\}()\[\].,;+-*/&|<>=~"
 JACK_WHITE = " \n\t"
+SPECIAL_TOKENS = {"<" : "&lt;", ">" : "&gt;", "&" : "&amp;"}
 
 class JackTokenizer:
     current_token = None
@@ -34,7 +35,7 @@ class JackTokenizer:
 
     # auxiliary method read_next_real_char:
     # finds next character that is not whitespace or part of a comment
-    # TODO: more efficient implementation using regex
+    # TODO: easier implementation using regular expressions?
     def read_next_real_char(self):
         while True:
             c = self.file.read(1)
@@ -95,7 +96,7 @@ class JackTokenizer:
             
             if is_string: # if we are in a string, continue reading unless we see the closing "
                 if char == "\"":
-                    self.next_token = Token("string_const", new_token_content)
+                    self.next_token = Token("stringConstant", new_token_content)
                     break
                 else:
                     new_token_content += char
@@ -134,14 +135,18 @@ class JackTokenizer:
         self.current_token = self.next_token
         self.find_next_token()
         return
-    
+
     def ttype(self):
         assert self.current_token != None
         return self.current_token.token_type
 
+
     def content(self):
         assert self.current_token != None
-        return self.current_token.content
+        if self.current_token.content in "<>&":
+            return SPECIAL_TOKENS[self.current_token.content]
+        else:
+            return self.current_token.content
 
     def next_ttype(self):
         return self.next_token.token_type

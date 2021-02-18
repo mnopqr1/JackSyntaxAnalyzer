@@ -2,6 +2,8 @@ from jacktokenizer import JackTokenizer
 
 JACK_SUBROUTINE_NAMES = ["constructor", "function", "method"]
 JACK_STATEMENT_KEYWORDS = ["if", "let", "while", "do", "return"]
+JACK_UNARY_OP = "-~"
+JACK_BINARY_OP = "+-*/&|<>="
 INDENT_SIZE = 2
 
 
@@ -158,13 +160,14 @@ class CompilationEngine:
     def compile_do_statement(self):
         self.opentag("doStatement")
         self.eat("do")
-        self.compile_subroutine_call()
+        self.next_terminals(1) # write first identifier: subroutineName or className or varName
+        self.complete_subroutine_call()
         self.eat(";")
         self.closetag("doStatement")
 
-    def compile_subroutine_call(self):
-        # subroutine call is not encapsulated in tag (not sure why...)
-        self.next_terminals(1) # write identifier: subroutineName or className or varName
+    """This method assumes we just wrote the first identifier in a subroutine call
+    """
+    def complete_subroutine_call(self):
         if self.tokenizer.next_content() == '.': 
             self.eat(".")
             self.next_terminals(1) # write the true subroutineName
@@ -209,12 +212,41 @@ class CompilationEngine:
     def compile_expression(self):
         self.opentag("expression")
         
-        # expression is non-empty list of terms but for now it is just one term
+        # expression is a term, possibly followed by a number of repetitions of (op term)
         self.compile_term()
+        while self.tokenizer.next_content() in JACK_BINARY_OP:
+            self.next_terminals(1)
+            self.compile_term()
 
         self.closetag("expression")
     
     def compile_term(self):
         self.opentag("term")
-        self.next_terminals(1)  # a term is just a single terminal for now
+        
+        if self.tokenizer.next_token.is_constant():
+            self.next_terminals(1)
+        elif self.tokenizer.next_content() in JACK_UNARY_OP:
+            self.next_terminals(1)
+            self.compile_term()
+        elif self.tokenizer.next_content() == '(':
+            self.eat('(')
+            self.compile_expression()
+            self.eat(')')
+        
+        # if we did not succeed yet, then we must be reading an identifier
+        # we look ahead to the next symbol, which can be [, (, ., or something else
+        else:
+            self.next_terminals(1)
+            if self.tokenizer.next_content() == '[': # the identifier is an array 
+                self.eat('[')
+                self.compile_expression()
+                self.eat(']')
+            elif self.tokenizer.next_content() == '.' or self.tokenizer.next_content() == '(': # the identifier 
+                self.complete_subroutine_call()
+        
+            # if we are in none of these cases, 
+            # then the identifier must have been a varname, 
+            # and we've already written it,
+            # so nothing else to do.
+
         self.closetag("term")
