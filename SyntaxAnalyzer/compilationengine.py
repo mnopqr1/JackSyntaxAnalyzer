@@ -8,12 +8,15 @@ INDENT_SIZE = 2
 
 
 class CompilationEngine:
+    # constructor
     def __init__(self, filename):
         self.tokenizer = JackTokenizer(filename)
         self.outfilename = filename[:-4] + "xml"
         self.outfile = open(self.outfilename, 'w')
         self.current_level = 0
     
+    # advance & write functions:
+    # open xml tag, close xml tag, write terminal symbol, eat some terminal symbols
     def opentag(self, tagname):
         self.outfile.write(" " * self.current_level * INDENT_SIZE + "<" + tagname + ">" + "\n")
         self.current_level += 1
@@ -22,49 +25,52 @@ class CompilationEngine:
         self.current_level -= 1
         self.outfile.write(" " * self.current_level * INDENT_SIZE + "</" + tagname + ">" + "\n")
     
-    def get_assertion_err(self, s):
-        return "while writing " + self.outfilename + \
-        ", expected token " + s + \
-        ", but found token " + \
-        self.tokenizer.next_content() + \
-        " on line " + str(self.tokenizer.current_line)
-
-    def eat(self, s):
-        for word in s.split(" "):
-            assert self.tokenizer.next_content() == word, get_assertion_err(word)
-            self.next_terminals(1)
 
     def write_terminal(self, ttype, content):
         self.outfile.write(" " * self.current_level * INDENT_SIZE + "<" + ttype + "> " + content + " </" + ttype + ">" + "\n")
+
+    def eat(self, s):
+        for word in s.split(" "):
+            assert self.tokenizer.next_content() == word, self.get_error(word)
+            self.next_terminals(1)
 
     def next_terminals(self, n):
         for i in range(0,n):
             self.tokenizer.advance()
             self.write_terminal(self.tokenizer.ttype(), self.tokenizer.content())
 
+    # error message when trying to eat
+    def get_error(self, s):
+        return "while writing " + self.outfilename + \
+        ", expected token " + s + \
+        ", but found token " + \
+        self.tokenizer.next_content() + \
+        " on line " + str(self.tokenizer.current_line)
+
     def compile_class(self):
         self.opentag("class")
-        self.next_terminals(3) # class initialization consists of "class", "name", "{"
+        self.eat("class")                       # class
+        self.next_terminals(1)                  # name
+        self.eat("{")                           # {
+
         
-        # the class variable declarations run until either the closing '}' of the class,
-        # or the first time we see a subroutine declaration.
+        # variable declarations
         while (self.tokenizer.next_content() != '}' and 
                self.tokenizer.next_token.content not in JACK_SUBROUTINE_NAMES):
             self.compile_class_var_dec()
-            
 
-        # the subroutine declarations then run until we see the closing '}'
+        # subroutine declarations
         while self.tokenizer.next_content() != '}':
             self.compile_subroutine_dec()
 
-        self.next_terminals(1) # write the closing } symbol
+        self.eat("}")                            # }
         self.closetag("class")
 
-    def compile_class_var_dec(self):
+    def compile_class_var_dec(self):  # class variable declaration
         assert self.tokenizer.next_content() == "static" or self.tokenizer.next_content() == "field"
         self.opentag("classVarDec")
         
-        self.next_terminals(3)  # write the static or field, type declaration, identifier name
+        self.next_terminals(3)        # static or field, type declaration, identifier name
         while (self.tokenizer.next_content() == ","):
             self.eat(",")
             self.next_terminals(1)
@@ -73,21 +79,24 @@ class CompilationEngine:
         
         self.closetag("classVarDec")
 
-    def compile_subroutine_dec(self):
+    def compile_subroutine_dec(self):                                         # subroutine declaration
         self.opentag("subroutineDec")
-        self.next_terminals(4) # write subroutine type, return type, name, and ( for parameter list
+        self.next_terminals(3)                                                # subroutine type, return type, name
+        self.eat("(")                                                         # (parameters)
         self.compile_parameter_list()
-        self.next_terminals(1)  # closing ) of parameter list
+        self.eat(")")
 
-        self.opentag("subroutineBody")
-        self.next_terminals(1)  # opening { for subroutine
-        while (self.tokenizer.next_content() not in JACK_STATEMENT_KEYWORDS):
+        self.opentag("subroutineBody")                                        # {
+        self.eat("{")
+        while (self.tokenizer.next_content() not in JACK_STATEMENT_KEYWORDS): # variable declarations
             self.compile_var_dec()
+
         self.opentag("statements")
-        while (self.tokenizer.next_content() != '}'):
+        while (self.tokenizer.next_content() != '}'):                         # statements
             self.compile_statement()
         self.closetag("statements")
-        self.next_terminals(1) # closing } for subroutine
+
+        self.eat("}")                                                         # }
         self.closetag("subroutineBody")
 
         self.closetag("subroutineDec")
@@ -95,24 +104,27 @@ class CompilationEngine:
     def compile_parameter_list(self):
         self.opentag("parameterList")
         while self.tokenizer.next_content() != ')':
-            self.next_terminals(2) # write the variable type and name
-            if self.tokenizer.next_content == ')':
-                self.next_terminals(1) # write the comma if it is there
+            self.next_terminals(2)                    # variable type and name
+            if self.tokenizer.next_content() != ')':  # ,
+                self.eat(",") 
         self.closetag("parameterList")
 
-    def compile_var_dec(self):
+    def compile_var_dec(self):    # variable declaration
         self.opentag("varDec")
-        self.eat("var")
-        self.next_terminals(2) # write type name and first declared var name
+        self.eat("var")            # var
+        self.next_terminals(2)     # type name and first declared var name
 
         while (self.tokenizer.next_content() != ';'):
-            self.next_terminals(2) # write the comma and next variable name
-        self.next_terminals(1) # write the end of line semicolon
+            self.eat(",")
+            self.next_terminals(1) # next variable names
+        self.eat(";")
         self.closetag("varDec")
 
     
     def compile_statement(self):
         assert self.tokenizer.next_content() in JACK_STATEMENT_KEYWORDS
+        
+        # dispatch to the correct statement compiler
         statement_type = self.tokenizer.next_content()
         if statement_type == "let":
             self.compile_let_statement()
@@ -127,52 +139,57 @@ class CompilationEngine:
 
     def compile_let_statement(self):
         self.opentag("letStatement")
-        self.eat("let") 
-        self.next_terminals(1) # write var name
-        if self.tokenizer.next_content() == '[':
+
+        self.eat("let")                          # let
+        self.next_terminals(1)                   # variable name
+        if self.tokenizer.next_content() == '[': # possible array index
             self.eat('[')
             self.compile_expression()
             self.eat(']')
 
-        self.eat('=')
-        self.compile_expression()
+        self.eat('=')                            # =
+
+        self.compile_expression()                # expression
         
-        self.eat(';')
+        self.eat(';')                            # ;
 
         self.closetag("letStatement")
 
     def compile_if_statement(self):
         self.opentag("ifStatement")
-        self.eat("if")
-        self.eat("(")
+                                         
+        self.eat("if")                              # if
+        self.eat("(")                               # (condition)
         self.compile_expression()
         self.eat(")")
-        self.eat("{")
+
+        self.eat("{")                               # statement block
         self.compile_statements()
         self.eat("}")
-        if self.tokenizer.next_content() == "else":
-            self.eat("else")
+
+        if self.tokenizer.next_content() == "else": # else
+            self.eat("else")                        # statement block
             self.eat("{")
             self.compile_statements()
             self.eat("}")
+
         self.closetag("ifStatement")
 
     def compile_do_statement(self):
         self.opentag("doStatement")
-        self.eat("do")
-        self.next_terminals(1) # write first identifier: subroutineName or className or varName
-        self.complete_subroutine_call()
-        self.eat(";")
+        self.eat("do")                   # do
+        self.next_terminals(1)           # identifier
+        self.finish_subroutine_call()  # possibly add .identifier2, and (parameterlist)
+        self.eat(";")                    # ;
         self.closetag("doStatement")
 
-    """This method assumes we just wrote the first identifier in a subroutine call
-    """
-    def complete_subroutine_call(self):
+    """This method assumes we just wrote the first identifier in a subroutine call"""
+    def finish_subroutine_call(self):
         if self.tokenizer.next_content() == '.': 
-            self.eat(".")
-            self.next_terminals(1) # write the true subroutineName
+            self.eat(".")                # .
+            self.next_terminals(1)       # subroutinename
         self.eat("(")
-        self.compile_expression_list()
+        self.compile_expression_list()   # expressions to go into parameters
         self.eat(")")
 
     
@@ -186,11 +203,11 @@ class CompilationEngine:
 
     def compile_while_statement(self):
         self.opentag("whileStatement")
-        self.eat("while")
-        self.eat("(")
+        self.eat("while")                # while (condition)
+        self.eat("(")                  
         self.compile_expression()
         self.eat(")")
-        self.eat("{")
+        self.eat("{")                    # statement block
         self.compile_statements()
         self.eat("}")
         self.closetag("whileStatement")
@@ -203,10 +220,10 @@ class CompilationEngine:
 
     def compile_return_statement(self):
         self.opentag("returnStatement")
-        self.eat("return")
+        self.eat("return")                # return
         if self.tokenizer.next_content() != ";":
-            self.compile_expression()
-        self.eat(";")
+            self.compile_expression()     # expression
+        self.eat(";")                     # ;
         self.closetag("returnStatement")
 
     def compile_expression(self):
@@ -223,11 +240,15 @@ class CompilationEngine:
     def compile_term(self):
         self.opentag("term")
         
+        # first checks:
+        # is the term a constant
         if self.tokenizer.next_token.is_constant():
             self.next_terminals(1)
+        # is it a unary operator
         elif self.tokenizer.next_content() in JACK_UNARY_OP:
             self.next_terminals(1)
             self.compile_term()
+        # is it a (expression)
         elif self.tokenizer.next_content() == '(':
             self.eat('(')
             self.compile_expression()
@@ -236,17 +257,17 @@ class CompilationEngine:
         # if we did not succeed yet, then we must be reading an identifier
         # we look ahead to the next symbol, which can be [, (, ., or something else
         else:
-            self.next_terminals(1)
-            if self.tokenizer.next_content() == '[': # the identifier is an array 
+            self.next_terminals(1)  # write the identifier
+             # the identifier names an array 
+            if self.tokenizer.next_content() == '[':
                 self.eat('[')
                 self.compile_expression()
                 self.eat(']')
-            elif self.tokenizer.next_content() == '.' or self.tokenizer.next_content() == '(': # the identifier 
-                self.complete_subroutine_call()
+            # the identifier is part of a subroutine call
+            elif self.tokenizer.next_content() == '.' or self.tokenizer.next_content() == '(': 
+                self.finish_subroutine_call()
         
-            # if we are in none of these cases, 
-            # then the identifier must have been a varname, 
-            # and we've already written it,
-            # so nothing else to do.
+            # if we are in none of these cases,  then the identifier must have been a varname, 
+            # and we've already written it, so nothing else to do.
 
         self.closetag("term")
