@@ -1,5 +1,5 @@
 from compilationengine import CompilationEngine
 
-engine = CompilationEngine("Main.jack")
+engine = CompilationEngine("tests/Square/Main.jack")
 engine.compile_class()
 

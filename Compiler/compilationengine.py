@@ -1,4 +1,5 @@
 from jacktokenizer import JackTokenizer
+from symboltable import SymbolTable
 
 JACK_SUBROUTINE_NAMES = ["constructor", "function", "method"]
 JACK_STATEMENT_KEYWORDS = ["if", "let", "while", "do", "return"]
@@ -39,6 +40,13 @@ class CompilationEngine:
             self.tokenizer.advance()
             self.write_terminal(self.tokenizer.ttype(), self.tokenizer.content())
 
+    def get_contents(self, n):
+        contents = []
+        for i in range(0,n):
+            self.tokenizer.advance()
+            contents.append(self.tokenizer.content())
+        return contents
+
     # error message when trying to eat
     def get_error(self, s):
         return "while writing " + self.outfilename + \
@@ -48,6 +56,7 @@ class CompilationEngine:
         " on line " + str(self.tokenizer.current_line)
 
     def compile_class(self):
+        self.symboltable = SymbolTable()
         self.opentag("class")
         self.eat("class")                       # class
         self.next_terminals(1)                  # name
@@ -66,11 +75,36 @@ class CompilationEngine:
         self.eat("}")                            # }
         self.closetag("class")
 
+    def write_identifier(self, sname, skind, being_defined, stype, index):
+        self.opentag("identifier")
+        self.opentag("name")
+        self.outfile.write(sname)
+        self.closetag("name")
+        self.opentag("kind")
+        self.outfile.write(skind)
+        self.closetag("kind")
+        self.opentag("isdefinition")
+        self.outfile.write(str(being_defined))
+        self.closetag("isdefinition")
+        self.opentag("type")
+        self.outfile.write(stype)
+        self.closetag("type")
+        self.opentag("index")
+        self.outfile.write(str(index))
+        self.closetag("index")
+        self.closetag("identifier")
+
     def compile_class_var_dec(self):  # class variable declaration
         assert self.tokenizer.next_content() == "static" or self.tokenizer.next_content() == "field"
         self.opentag("classVarDec")
         
-        self.next_terminals(3)        # static or field, type declaration, identifier name
+        identifier_info = self.get_contents(3) # static or field, type declaration, identifier name
+        skind = identifier_info[0]
+        stype = identifier_info[1]
+        sname = identifier_info[2]
+        self.symboltable.define(sname, stype, skind)
+        record = self.symboltable.get_record(sname)
+        self.write_identifier(sname, record["kind"], True, record["type"], record["index"])
         while (self.tokenizer.next_content() == ","):
             self.eat(",")
             self.next_terminals(1)
@@ -178,16 +212,21 @@ class CompilationEngine:
     def compile_do_statement(self):
         self.opentag("doStatement")
         self.eat("do")                   # do
-        self.next_terminals(1)           # identifier
-        self.finish_subroutine_call()  # possibly add .identifier2, and (parameterlist)
+        sname = self.get_contents(1)[0]  # read first identifier
+        
+        self.finish_subroutine_call(sname)    # possibly add .identifier2, and (parameterlist)
         self.eat(";")                    # ;
         self.closetag("doStatement")
 
-    """This method assumes we just wrote the first identifier in a subroutine call"""
-    def finish_subroutine_call(self):
+    """This method finishes a subroutine call, after having read the first name"""
+    def finish_subroutine_call(self, firstname):
         if self.tokenizer.next_content() == '.': 
-            self.eat(".")                # .
-            self.next_terminals(1)       # subroutinename
+            self.eat(".")                              # .
+            secondname = self.get_contents(1)[0]       # read subroutine name
+            self.write_identifier(firstname, "class", False, "class", -1)
+            self.write_identifier(secondname, "subroutine", False, "subroutine", -1)
+        else: # otherwise the firstname was already a subroutine name within this class
+            self.write_identifier(firstname, "subroutine", False, "subroutine", -1)
         self.eat("(")
         self.compile_expression_list()   # expressions to go into parameters
         self.eat(")")
@@ -257,15 +296,17 @@ class CompilationEngine:
         # if we did not succeed yet, then we must be reading an identifier
         # we look ahead to the next symbol, which can be [, (, ., or something else
         else:
-            self.next_terminals(1)  # write the identifier
+            sname = self.get_contents(1)[0]  # get the identifier
              # the identifier names an array 
             if self.tokenizer.next_content() == '[':
+                record = self.symboltable.get_record(sname)
+                self.write_identifier(sname,record["kind"],False,record["type"],record["index"])
                 self.eat('[')
                 self.compile_expression()
                 self.eat(']')
             # the identifier is part of a subroutine call
             elif self.tokenizer.next_content() == '.' or self.tokenizer.next_content() == '(': 
-                self.finish_subroutine_call()
+                self.finish_subroutine_call(sname)
         
             # if we are in none of these cases,  then the identifier must have been a varname, 
             # and we've already written it, so nothing else to do.

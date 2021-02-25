@@ -1,0 +1,42 @@
+class SymbolTable:
+    def __init__(self):
+        self.class_table = {}
+        self.subroutine_table = {}
+        self.assign_next = {"static" : 0, "field" : 0, "arg" : 0, "var" : 0}
+
+    def start_subroutine(self):
+        self.subroutine_table = {}
+    
+    '''Define a new identifier of given sname, stype and skind (static, field, arg or var)
+    and assign a running index to it'''
+    def define(self, sname, stype, skind):
+        assert skind in {"static", "field", "arg", "var"}, "Unrecognized identifier kind: must be static, field, arg or var"
+        new_record = {"type" : stype, "kind" : skind, "index" : self.assign_next[skind]}
+        self.assign_next[skind] += 1
+        if skind == "static" or skind == "field":
+            self.class_table[sname] = new_record
+        elif skind == "arg" or skind == "var": 
+            self.subroutine_table[sname] = new_record
+
+    def var_count(self, skind):
+        return self.assign_next[skind]
+    
+    def get_record(self, sname):
+        assert sname in self.subroutine_table.keys() or sname in self.class_table.keys(), \
+            "Unrecognized symbol name: " + sname
+        if sname in self.subroutine_table.keys():
+            return self.subroutine_table[sname]
+        else:
+            return self.class_table[sname]
+
+    def kind_of(self, sname):
+        return self.get_record(sname)["kind"]
+
+    def type_of(self, sname):
+        return self.get_record(sname)["type"]
+
+    def index_of(self, sname):
+        return self.get_record(sname)["index"]
+
+
+    
