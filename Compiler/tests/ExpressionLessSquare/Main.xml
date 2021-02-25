@@ -1,0 +1,148 @@
+<class>
+  <keyword> class </keyword>
+  <identifier> Main </identifier>
+  <symbol> { </symbol>
+  <classVarDec>
+    <identifier>
+      <name> test </name>
+      <kind> static </kind>
+      <isdefinition> True </isdefinition>
+      <type> boolean </type>
+      <index> 0 </index>
+    </identifier>
+    <symbol> ; </symbol>
+  </classVarDec>
+  <subroutineDec>
+    <identifier>
+      <name> main </name>
+      <kind> function </kind>
+      <isdefinition> True </isdefinition>
+      <type> void </type>
+      <index> -1 </index>
+    </identifier>
+    <symbol> ( </symbol>
+    <parameterList>
+    </parameterList>
+    <symbol> ) </symbol>
+    <subroutineBody>
+      <symbol> { </symbol>
+      <varDec>
+        <keyword> var </keyword>
+        <identifier> SquareGame </identifier>
+        <identifier> game </identifier>
+        <symbol> ; </symbol>
+      </varDec>
+      <statements>
+        <letStatement>
+          <keyword> let </keyword>
+          <identifier> game </identifier>
+          <symbol> = </symbol>
+          <expression>
+            <term>
+            </term>
+          </expression>
+          <symbol> ; </symbol>
+        </letStatement>
+        <doStatement>
+          <keyword> do </keyword>
+          <symbol> . </symbol>
+          <identifier>
+            <name> game </name>
+            <kind> class </kind>
+            <isdefinition> False </isdefinition>
+            <type> class </type>
+            <index> -1 </index>
+          </identifier>
+          <identifier>
+            <name> run </name>
+            <kind> subroutine </kind>
+            <isdefinition> False </isdefinition>
+            <type> subroutine </type>
+            <index> -1 </index>
+          </identifier>
+          <symbol> ( </symbol>
+          <expressionList>
+          </expressionList>
+          <symbol> ) </symbol>
+          <symbol> ; </symbol>
+        </doStatement>
+        <doStatement>
+          <keyword> do </keyword>
+          <symbol> . </symbol>
+          <identifier>
+            <name> game </name>
+            <kind> class </kind>
+            <isdefinition> False </isdefinition>
+            <type> class </type>
+            <index> -1 </index>
+          </identifier>
+          <identifier>
+            <name> dispose </name>
+            <kind> subroutine </kind>
+            <isdefinition> False </isdefinition>
+            <type> subroutine </type>
+            <index> -1 </index>
+          </identifier>
+          <symbol> ( </symbol>
+          <expressionList>
+          </expressionList>
+          <symbol> ) </symbol>
+          <symbol> ; </symbol>
+        </doStatement>
+        <returnStatement>
+          <keyword> return </keyword>
+          <symbol> ; </symbol>
+        </returnStatement>
+      </statements>
+      <symbol> } </symbol>
+    </subroutineBody>
+  </subroutineDec>
+  <subroutineDec>
+    <identifier>
+      <name> more </name>
+      <kind> function </kind>
+      <isdefinition> True </isdefinition>
+      <type> void </type>
+      <index> -1 </index>
+    </identifier>
+    <symbol> ( </symbol>
+    <parameterList>
+    </parameterList>
+    <symbol> ) </symbol>
+    <subroutineBody>
+      <symbol> { </symbol>
+      <varDec>
+        <keyword> var </keyword>
+        <keyword> boolean </keyword>
+        <identifier> b </identifier>
+        <symbol> ; </symbol>
+      </varDec>
+      <statements>
+        <ifStatement>
+          <keyword> if </keyword>
+          <symbol> ( </symbol>
+          <expression>
+            <term>
+            </term>
+          </expression>
+          <symbol> ) </symbol>
+          <symbol> { </symbol>
+          <statements>
+          </statements>
+          <symbol> } </symbol>
+          <keyword> else </keyword>
+          <symbol> { </symbol>
+          <statements>
+          </statements>
+          <symbol> } </symbol>
+        </ifStatement>
+        <returnStatement>
+          <keyword> return </keyword>
+          <symbol> ; </symbol>
+        </returnStatement>
+      </statements>
+      <symbol> } </symbol>
+    </subroutineBody>
+  </subroutineDec>
+  <symbol> } </symbol>
+</class>

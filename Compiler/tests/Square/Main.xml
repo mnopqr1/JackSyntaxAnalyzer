@@ -4,23 +4,22 @@
   <symbol> { </symbol>
   <classVarDec>
     <identifier>
-      <name>
-test      </name>
-      <kind>
-static      </kind>
-      <isdefinition>
-True      </isdefinition>
-      <type>
-boolean      </type>
-      <index>
-0      </index>
+      <name> test </name>
+      <kind> static </kind>
+      <isdefinition> True </isdefinition>
+      <type> boolean </type>
+      <index> 0 </index>
     </identifier>
     <symbol> ; </symbol>
   </classVarDec>
   <subroutineDec>
-    <keyword> function </keyword>
-    <keyword> void </keyword>
-    <identifier> main </identifier>
+    <identifier>
+      <name> main </name>
+      <kind> function </kind>
+      <isdefinition> True </isdefinition>
+      <type> void </type>
+      <index> -1 </index>
+    </identifier>
     <symbol> ( </symbol>
     <parameterList>
     </parameterList>
@@ -28,42 +27,42 @@ boolean      </type>
     <subroutineBody>
       <symbol> { </symbol>
       <varDec>
-        <keyword> var </keyword>
-        <identifier> SquareGame </identifier>
-        <identifier> game </identifier>
+        <identifier>
+          <name> game </name>
+          <kind> var </kind>
+          <isdefinition> True </isdefinition>
+          <type> SquareGame </type>
+          <index> 0 </index>
+        </identifier>
         <symbol> ; </symbol>
       </varDec>
       <statements>
         <letStatement>
           <keyword> let </keyword>
-          <identifier> game </identifier>
+          <identifier>
+            <name> game </name>
+            <kind> var </kind>
+            <isdefinition> False </isdefinition>
+            <type> SquareGame </type>
+            <index> 0 </index>
+          </identifier>
           <symbol> = </symbol>
           <expression>
             <term>
               <symbol> . </symbol>
               <identifier>
-                <name>
-SquareGame                </name>
-                <kind>
-class                </kind>
-                <isdefinition>
-False                </isdefinition>
-                <type>
-class                </type>
-                <index>
--1                </index>
+                <name> SquareGame </name>
+                <kind> class </kind>
+                <isdefinition> False </isdefinition>
+                <type> class </type>
+                <index> -1 </index>
               </identifier>
               <identifier>
-                <name>
-new                </name>
-                <kind>
-subroutine                </kind>
-                <isdefinition>
-False                </isdefinition>
-                <type>
-subroutine                </type>
-                <index>
--1                </index>
+                <name> new </name>
+                <kind> subroutine </kind>
+                <isdefinition> False </isdefinition>
+                <type> subroutine </type>
+                <index> -1 </index>
               </identifier>
               <symbol> ( </symbol>
               <expressionList>
@@ -77,28 +76,18 @@ subroutine                </type>
           <keyword> do </keyword>
           <symbol> . </symbol>
           <identifier>
-            <name>
-game            </name>
-            <kind>
-class            </kind>
-            <isdefinition>
-False            </isdefinition>
-            <type>
-class            </type>
-            <index>
--1            </index>
+            <name> game </name>
+            <kind> class </kind>
+            <isdefinition> False </isdefinition>
+            <type> class </type>
+            <index> -1 </index>
           </identifier>
           <identifier>
-            <name>
-run            </name>
-            <kind>
-subroutine            </kind>
-            <isdefinition>
-False            </isdefinition>
-            <type>
-subroutine            </type>
-            <index>
--1            </index>
+            <name> run </name>
+            <kind> subroutine </kind>
+            <isdefinition> False </isdefinition>
+            <type> subroutine </type>
+            <index> -1 </index>
           </identifier>
           <symbol> ( </symbol>
           <expressionList>
@@ -110,28 +99,18 @@ subroutine            </type>
           <keyword> do </keyword>
           <symbol> . </symbol>
           <identifier>
-            <name>
-game            </name>
-            <kind>
-class            </kind>
-            <isdefinition>
-False            </isdefinition>
-            <type>
-class            </type>
-            <index>
--1            </index>
+            <name> game </name>
+            <kind> class </kind>
+            <isdefinition> False </isdefinition>
+            <type> class </type>
+            <index> -1 </index>
           </identifier>
           <identifier>
-            <name>
-dispose            </name>
-            <kind>
-subroutine            </kind>
-            <isdefinition>
-False            </isdefinition>
-            <type>
-subroutine            </type>
-            <index>
--1            </index>
+            <name> dispose </name>
+            <kind> subroutine </kind>
+            <isdefinition> False </isdefinition>
+            <type> subroutine </type>
+            <index> -1 </index>
           </identifier>
           <symbol> ( </symbol>
           <expressionList>
@@ -148,9 +127,13 @@ subroutine            </type>
     </subroutineBody>
   </subroutineDec>
   <subroutineDec>
-    <keyword> function </keyword>
-    <keyword> void </keyword>
-    <identifier> more </identifier>
+    <identifier>
+      <name> more </name>
+      <kind> function </kind>
+      <isdefinition> True </isdefinition>
+      <type> void </type>
+      <index> -1 </index>
+    </identifier>
     <symbol> ( </symbol>
     <parameterList>
     </parameterList>
@@ -158,23 +141,41 @@ subroutine            </type>
     <subroutineBody>
       <symbol> { </symbol>
       <varDec>
-        <keyword> var </keyword>
-        <keyword> int </keyword>
-        <identifier> i </identifier>
+        <identifier>
+          <name> i </name>
+          <kind> var </kind>
+          <isdefinition> True </isdefinition>
+          <type> int </type>
+          <index> 1 </index>
+        </identifier>
         <symbol> , </symbol>
-        <identifier> j </identifier>
+        <identifier>
+          <name> j </name>
+          <kind> var </kind>
+          <isdefinition> True </isdefinition>
+          <type> int </type>
+          <index> 2 </index>
+        </identifier>
         <symbol> ; </symbol>
       </varDec>
       <varDec>
-        <keyword> var </keyword>
-        <identifier> String </identifier>
-        <identifier> s </identifier>
+        <identifier>
+          <name> s </name>
+          <kind> var </kind>
+          <isdefinition> True </isdefinition>
+          <type> String </type>
+          <index> 3 </index>
+        </identifier>
         <symbol> ; </symbol>
       </varDec>
       <varDec>
-        <keyword> var </keyword>
-        <identifier> Array </identifier>
-        <identifier> a </identifier>
+        <identifier>
+          <name> a </name>
+          <kind> var </kind>
+          <isdefinition> True </isdefinition>
+          <type> Array </type>
+          <index> 4 </index>
+        </identifier>
         <symbol> ; </symbol>
       </varDec>
       <statements>
@@ -191,7 +192,13 @@ subroutine            </type>
           <statements>
             <letStatement>
               <keyword> let </keyword>
-              <identifier> s </identifier>
+              <identifier>
+                <name> s </name>
+                <kind> var </kind>
+                <isdefinition> False </isdefinition>
+                <type> String </type>
+                <index> 3 </index>
+              </identifier>
               <symbol> = </symbol>
               <expression>
                 <term>
@@ -202,7 +209,13 @@ subroutine            </type>
             </letStatement>
             <letStatement>
               <keyword> let </keyword>
-              <identifier> s </identifier>
+              <identifier>
+                <name> s </name>
+                <kind> var </kind>
+                <isdefinition> False </isdefinition>
+                <type> String </type>
+                <index> 3 </index>
+              </identifier>
               <symbol> = </symbol>
               <expression>
                 <term>
@@ -213,7 +226,13 @@ subroutine            </type>
             </letStatement>
             <letStatement>
               <keyword> let </keyword>
-              <identifier> a </identifier>
+              <identifier>
+                <name> a </name>
+                <kind> var </kind>
+                <isdefinition> False </isdefinition>
+                <type> Array </type>
+                <index> 4 </index>
+              </identifier>
               <symbol> [ </symbol>
               <expression>
                 <term>
@@ -224,3 +243,150 @@ subroutine            </type>
               <symbol> = </symbol>
               <expression>
                 <term>
+                  <identifier>
+                    <name> a </name>
+                    <kind> var </kind>
+                    <isdefinition> False </isdefinition>
+                    <type> Array </type>
+                    <index> 4 </index>
+                  </identifier>
+                  <symbol> [ </symbol>
+                  <expression>
+                    <term>
+                      <integerConstant> 2 </integerConstant>
+                    </term>
+                  </expression>
+                  <symbol> ] </symbol>
+                </term>
+              </expression>
+              <symbol> ; </symbol>
+            </letStatement>
+          </statements>
+          <symbol> } </symbol>
+          <keyword> else </keyword>
+          <symbol> { </symbol>
+          <statements>
+            <letStatement>
+              <keyword> let </keyword>
+              <identifier>
+                <name> i </name>
+                <kind> var </kind>
+                <isdefinition> False </isdefinition>
+                <type> int </type>
+                <index> 1 </index>
+              </identifier>
+              <symbol> = </symbol>
+              <expression>
+                <term>
+                  <identifier>
+                    <name> i </name>
+                    <kind> var </kind>
+                    <isdefinition> False </isdefinition>
+                    <type> int </type>
+                    <index> 1 </index>
+                  </identifier>
+                </term>
+                <symbol> * </symbol>
+                <term>
+                  <symbol> ( </symbol>
+                  <expression>
+                    <term>
+                      <symbol> - </symbol>
+                      <term>
+                        <identifier>
+                          <name> j </name>
+                          <kind> var </kind>
+                          <isdefinition> False </isdefinition>
+                          <type> int </type>
+                          <index> 2 </index>
+                        </identifier>
+                      </term>
+                    </term>
+                  </expression>
+                  <symbol> ) </symbol>
+                </term>
+              </expression>
+              <symbol> ; </symbol>
+            </letStatement>
+            <letStatement>
+              <keyword> let </keyword>
+              <identifier>
+                <name> j </name>
+                <kind> var </kind>
+                <isdefinition> False </isdefinition>
+                <type> int </type>
+                <index> 2 </index>
+              </identifier>
+              <symbol> = </symbol>
+              <expression>
+                <term>
+                  <identifier>
+                    <name> j </name>
+                    <kind> var </kind>
+                    <isdefinition> False </isdefinition>
+                    <type> int </type>
+                    <index> 2 </index>
+                  </identifier>
+                </term>
+                <symbol> / </symbol>
+                <term>
+                  <symbol> ( </symbol>
+                  <expression>
+                    <term>
+                      <symbol> - </symbol>
+                      <term>
+                        <integerConstant> 2 </integerConstant>
+                      </term>
+                    </term>
+                  </expression>
+                  <symbol> ) </symbol>
+                </term>
+              </expression>
+              <symbol> ; </symbol>
+            </letStatement>
+            <letStatement>
+              <keyword> let </keyword>
+              <identifier>
+                <name> i </name>
+                <kind> var </kind>
+                <isdefinition> False </isdefinition>
+                <type> int </type>
+                <index> 1 </index>
+              </identifier>
+              <symbol> = </symbol>
+              <expression>
+                <term>
+                  <identifier>
+                    <name> i </name>
+                    <kind> var </kind>
+                    <isdefinition> False </isdefinition>
+                    <type> int </type>
+                    <index> 1 </index>
+                  </identifier>
+                </term>
+                <symbol> | </symbol>
+                <term>
+                  <identifier>
+                    <name> j </name>
+                    <kind> var </kind>
+                    <isdefinition> False </isdefinition>
+                    <type> int </type>
+                    <index> 2 </index>
+                  </identifier>
+                </term>
+              </expression>
+              <symbol> ; </symbol>
+            </letStatement>
+          </statements>
+          <symbol> } </symbol>
+        </ifStatement>
+        <returnStatement>
+          <keyword> return </keyword>
+          <symbol> ; </symbol>
+        </returnStatement>
+      </statements>
+      <symbol> } </symbol>
+    </subroutineBody>
+  </subroutineDec>
+  <symbol> } </symbol>
+</class>

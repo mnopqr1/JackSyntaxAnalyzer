@@ -30,6 +30,10 @@ class CompilationEngine:
     def write_terminal(self, ttype, content):
         self.outfile.write(" " * self.current_level * INDENT_SIZE + "<" + ttype + "> " + content + " </" + ttype + ">" + "\n")
 
+    def writeintag(self, tagname, tagcontent):
+        self.outfile.write(" " * self.current_level * INDENT_SIZE + "<" + tagname + "> " + tagcontent + " </"+ tagname + ">\n")
+
+
     def eat(self, s):
         for word in s.split(" "):
             assert self.tokenizer.next_content() == word, self.get_error(word)
@@ -75,24 +79,21 @@ class CompilationEngine:
         self.eat("}")                            # }
         self.closetag("class")
 
+
     def write_identifier(self, sname, skind, being_defined, stype, index):
         self.opentag("identifier")
-        self.opentag("name")
-        self.outfile.write(sname)
-        self.closetag("name")
-        self.opentag("kind")
-        self.outfile.write(skind)
-        self.closetag("kind")
-        self.opentag("isdefinition")
-        self.outfile.write(str(being_defined))
-        self.closetag("isdefinition")
-        self.opentag("type")
-        self.outfile.write(stype)
-        self.closetag("type")
-        self.opentag("index")
-        self.outfile.write(str(index))
-        self.closetag("index")
+
+        self.writeintag("name",sname)
+        self.writeintag("kind",skind)
+        self.writeintag("isdefinition",str(being_defined))
+        self.writeintag("type",stype)
+        self.writeintag("index",str(index))
+
         self.closetag("identifier")
+    def declare_symbol(self, skind, stype, sname):
+        self.symboltable.define(sname, stype, skind)
+        record = self.symboltable.get_record(sname)
+        self.write_identifier(sname, record["kind"], True, record["type"], record["index"])
 
     def compile_class_var_dec(self):  # class variable declaration
         assert self.tokenizer.next_content() == "static" or self.tokenizer.next_content() == "field"
@@ -102,20 +103,22 @@ class CompilationEngine:
         skind = identifier_info[0]
         stype = identifier_info[1]
         sname = identifier_info[2]
-        self.symboltable.define(sname, stype, skind)
-        record = self.symboltable.get_record(sname)
-        self.write_identifier(sname, record["kind"], True, record["type"], record["index"])
+        self.declare_symbol(skind, stype, sname)
+        
         while (self.tokenizer.next_content() == ","):
             self.eat(",")
-            self.next_terminals(1)
-        
+            sname = self.get_contents(1)
+            self.declare_symbol(skind, stype, sname)
+
         self.eat(";")
         
         self.closetag("classVarDec")
 
-    def compile_subroutine_dec(self):                                         # subroutine declaration
-        self.opentag("subroutineDec")
-        self.next_terminals(3)                                                # subroutine type, return type, name
+    def compile_subroutine_dec(self):                                         
+        self.opentag("subroutineDec")                                        
+        definition_info = self.get_contents(3)                                # subroutine kind, return type, name
+        self.write_identifier(definition_info[2], definition_info[0], True, definition_info[1], -1)
+        # self.next_terminals(3)                                              
         self.eat("(")                                                         # (parameters)
         self.compile_parameter_list()
         self.eat(")")
@@ -145,12 +148,18 @@ class CompilationEngine:
 
     def compile_var_dec(self):    # variable declaration
         self.opentag("varDec")
-        self.eat("var")            # var
-        self.next_terminals(2)     # type name and first declared var name
 
+        declaration_info = self.get_contents(3)
+        skind = declaration_info[0] # var
+        stype = declaration_info[1] # type
+        sname = declaration_info[2] # first declared variable name
+
+        self.declare_symbol(skind, stype, sname)
+        
         while (self.tokenizer.next_content() != ';'):
             self.eat(",")
-            self.next_terminals(1) # next variable names
+            sname = self.get_contents(1)[0] # next variable names
+            self.declare_symbol(skind, stype, sname)
         self.eat(";")
         self.closetag("varDec")
 
@@ -175,7 +184,9 @@ class CompilationEngine:
         self.opentag("letStatement")
 
         self.eat("let")                          # let
-        self.next_terminals(1)                   # variable name
+        sname = self.get_contents(1)[0]          # variable name
+        self.lookup_and_write(sname)
+        #self.next_terminals(1)                   # variable name
         if self.tokenizer.next_content() == '[': # possible array index
             self.eat('[')
             self.compile_expression()
@@ -276,6 +287,10 @@ class CompilationEngine:
 
         self.closetag("expression")
     
+    def lookup_and_write(self, sname):
+        record = self.symboltable.get_record(sname)
+        self.write_identifier(sname,record["kind"],False,record["type"],record["index"])
+
     def compile_term(self):
         self.opentag("term")
         
@@ -297,18 +312,18 @@ class CompilationEngine:
         # we look ahead to the next symbol, which can be [, (, ., or something else
         else:
             sname = self.get_contents(1)[0]  # get the identifier
-             # the identifier names an array 
+            # the identifier names an array 
             if self.tokenizer.next_content() == '[':
-                record = self.symboltable.get_record(sname)
-                self.write_identifier(sname,record["kind"],False,record["type"],record["index"])
+                self.lookup_and_write(sname)
                 self.eat('[')
                 self.compile_expression()
                 self.eat(']')
             # the identifier is part of a subroutine call
             elif self.tokenizer.next_content() == '.' or self.tokenizer.next_content() == '(': 
                 self.finish_subroutine_call(sname)
-        
-            # if we are in none of these cases,  then the identifier must have been a varname, 
-            # and we've already written it, so nothing else to do.
+            else:
+            # if we are in none of these cases,  then the identifier must have been a varname, so we look it up
+                self.lookup_and_write(sname)
+                
 
         self.closetag("term")
