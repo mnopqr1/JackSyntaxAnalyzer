@@ -1,5 +1,6 @@
 from jacktokenizer import JackTokenizer
 from symboltable import SymbolTable
+from vmwriter import VMWriter
 
 JACK_SUBROUTINE_NAMES = ["constructor", "function", "method"]
 JACK_STATEMENT_KEYWORDS = ["if", "let", "while", "do", "return"]
@@ -8,13 +9,23 @@ JACK_BINARY_OP = "+-*/&|<>="
 INDENT_SIZE = 2
 
 
+"""Where I left this Thursday 25 March 9pm:
+* started making transition from writing XML file to VM file
+* wrote vmwriter class
+* need to rework all the compile-methods to write VM code
+* rewrote compileclass
+* started with the compilefunction method --> need to work on this
+"""
+
+
 class CompilationEngine:
     # constructor
     def __init__(self, filename):
         self.tokenizer = JackTokenizer(filename)
-        self.outfilename = filename[:-4] + "xml"
-        self.outfile = open(self.outfilename, 'w')
-        self.current_level = 0
+        self.write = VMWriter(filename[:-4] + "vm")
+        self.outfile = open("dummyfile", 'w')
+        
+
     
     # advance & write functions:
     # open xml tag, close xml tag, write terminal symbol, eat some terminal symbols
@@ -42,7 +53,6 @@ class CompilationEngine:
     def next_terminals(self, n):
         for i in range(0,n):
             self.tokenizer.advance()
-            self.write_terminal(self.tokenizer.ttype(), self.tokenizer.content())
 
     def get_contents(self, n):
         contents = []
@@ -50,6 +60,10 @@ class CompilationEngine:
             self.tokenizer.advance()
             contents.append(self.tokenizer.content())
         return contents
+
+    def get_content(self):
+        self.tokenizer.advance()
+        return self.tokenizer.content()
 
     # error message when trying to eat
     def get_error(self, s):
@@ -61,9 +75,8 @@ class CompilationEngine:
 
     def compile_class(self):
         self.symboltable = SymbolTable()
-        self.opentag("class")
         self.eat("class")                       # class
-        self.next_terminals(1)                  # name
+        self.classname = self.get_content()     # name        
         self.eat("{")                           # {
 
         
@@ -77,19 +90,17 @@ class CompilationEngine:
             self.compile_subroutine_dec()
 
         self.eat("}")                            # }
-        self.closetag("class")
 
 
     def write_identifier(self, sname, skind, being_defined, stype, index):
         self.opentag("identifier")
-
         self.writeintag("name",sname)
         self.writeintag("kind",skind)
         self.writeintag("isdefinition",str(being_defined))
         self.writeintag("type",stype)
         self.writeintag("index",str(index))
-
         self.closetag("identifier")
+
     def declare_symbol(self, skind, stype, sname):
         self.symboltable.define(sname, stype, skind)
         record = self.symboltable.get_record(sname)
@@ -117,11 +128,17 @@ class CompilationEngine:
     def compile_subroutine_dec(self):                                         
         self.opentag("subroutineDec")                                        
         definition_info = self.get_contents(3)                                # subroutine kind, return type, name
-        self.write_identifier(definition_info[2], definition_info[0], True, definition_info[1], -1)
+        kind = definition_info[0]
+        rtype = definition_info[1]
+        name = definition_info[2]
+        
+
+        # self.write_identifier(definition_info[2], definition_info[0], True, definition_info[1], -1)
         # self.next_terminals(3)                                              
         self.eat("(")                                                         # (parameters)
-        self.compile_parameter_list()
+        k = self.compile_parameter_list()                                     # number of parameters                                    
         self.eat(")")
+
 
         self.opentag("subroutineBody")                                        # {
         self.eat("{")
@@ -139,12 +156,13 @@ class CompilationEngine:
         self.closetag("subroutineDec")
 
     def compile_parameter_list(self):
-        self.opentag("parameterList")
+        n_params = 0
         while self.tokenizer.next_content() != ')':
+            n_params += 1
             self.next_terminals(2)                    # variable type and name
             if self.tokenizer.next_content() != ')':  # ,
                 self.eat(",") 
-        self.closetag("parameterList")
+        return n_params
 
     def compile_var_dec(self):    # variable declaration
         self.opentag("varDec")
