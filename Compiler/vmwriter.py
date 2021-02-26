@@ -1,6 +1,6 @@
 class VMWriter:
 
-    def __init__(filename):
+    def __init__(self, filename):
         self.file = open(filename, 'w')
     
     def push(self, segment, index):
@@ -22,7 +22,7 @@ class VMWriter:
         self.file.write("if-goto " + name + "\n")
     
     def call(self, name, n_args):
-        self.file.write("call " + name + str(n_args) + "\n")
+        self.file.write("call " + name + " " + str(n_args) + "\n")
     
     def function(self, name, n_locals):
         self.file.write("function " + name + str(n_locals) + "\n")

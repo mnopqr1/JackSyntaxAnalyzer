@@ -29,6 +29,9 @@ class SymbolTable:
         else:
             return self.class_table[sname]
 
+    def is_local(self, sname):
+        return sname in self.subroutine.table.keys()
+
     def kind_of(self, sname):
         return self.get_record(sname)["kind"]
 

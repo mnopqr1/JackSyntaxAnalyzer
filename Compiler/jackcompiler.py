@@ -6,7 +6,7 @@ import os
 def treatfile(fpath):
     engine = CompilationEngine(fpath)
     engine.compile_class()
-    print("XML file written for " + fpath)
+    print("VM file written for " + fpath)
 
 thepath = sys.argv[1]
 if os.path.isfile(thepath):

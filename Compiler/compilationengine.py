@@ -4,6 +4,17 @@ from vmwriter import VMWriter
 
 JACK_SUBROUTINE_NAMES = ["constructor", "function", "method"]
 JACK_STATEMENT_KEYWORDS = ["if", "let", "while", "do", "return"]
+VM_SEGMENT_NAME = {"arg": "argument", "var": "local", "static": "static", "field": "this"}
+VM_UNARY_OP_NAME = {"-" : "neg", "~" : "not"}
+VM_BINARY_OP_NAME = {"+": "add", 
+                     "-": "sub", 
+                     "&": "and", 
+                     "|" : "or", 
+                     "<" : "lt", 
+                     ">" : "gt", 
+                     "=": "eq", 
+                     "*" : "call Math.multiply 2",
+                     "/" : "call Math.divide 2"}
 JACK_UNARY_OP = "-~"
 JACK_BINARY_OP = "+-*/&|<>="
 INDENT_SIZE = 2
@@ -24,7 +35,9 @@ class CompilationEngine:
         self.tokenizer = JackTokenizer(filename)
         self.write = VMWriter(filename[:-4] + "vm")
         self.outfile = open("dummyfile", 'w')
-        
+        self.classname = None
+
+        self.current_level = 0
 
     
     # advance & write functions:
@@ -48,7 +61,8 @@ class CompilationEngine:
     def eat(self, s):
         for word in s.split(" "):
             assert self.tokenizer.next_content() == word, self.get_error(word)
-            self.next_terminals(1)
+            self.tokenizer.advance()
+            # self.next_terminals(1)
 
     def next_terminals(self, n):
         for i in range(0,n):
@@ -67,7 +81,7 @@ class CompilationEngine:
 
     # error message when trying to eat
     def get_error(self, s):
-        return "while writing " + self.outfilename + \
+        return "while writing class " + self.classname + \
         ", expected token " + s + \
         ", but found token " + \
         self.tokenizer.next_content() + \
@@ -78,7 +92,6 @@ class CompilationEngine:
         self.eat("class")                       # class
         self.classname = self.get_content()     # name        
         self.eat("{")                           # {
-
         
         # variable declarations
         while (self.tokenizer.next_content() != '}' and 
@@ -126,21 +139,18 @@ class CompilationEngine:
         self.closetag("classVarDec")
 
     def compile_subroutine_dec(self):                                         
-        self.opentag("subroutineDec")                                        
-        definition_info = self.get_contents(3)                                # subroutine kind, return type, name
-        kind = definition_info[0]
-        rtype = definition_info[1]
-        name = definition_info[2]
-        
-
-        # self.write_identifier(definition_info[2], definition_info[0], True, definition_info[1], -1)
-        # self.next_terminals(3)                                              
-        self.eat("(")                                                         # (parameters)
-        k = self.compile_parameter_list()                                     # number of parameters                                    
+        [skind, rettype, sname] = self.get_contents(3)                        # subroutine kind, return type, name
+                
+        self.eat("(")                                                         # get parameters
+        params = self.compile_parameter_list()                                                                       
         self.eat(")")
 
+        self.symboltable.start_subroutine()
+        
+        for param in params:
+            self.symboltable.define(param[1], param[0], "arg")
 
-        self.opentag("subroutineBody")                                        # {
+        
         self.eat("{")
         while (self.tokenizer.next_content() not in JACK_STATEMENT_KEYWORDS): # variable declarations
             self.compile_var_dec()
@@ -151,35 +161,31 @@ class CompilationEngine:
         self.closetag("statements")
 
         self.eat("}")                                                         # }
-        self.closetag("subroutineBody")
+        
 
-        self.closetag("subroutineDec")
+        
 
+    '''returns the list of parameters as a list of lists [vartype, varname]'''
     def compile_parameter_list(self):
-        n_params = 0
-        while self.tokenizer.next_content() != ')':
-            n_params += 1
-            self.next_terminals(2)                    # variable type and name
+        params = []
+        while self.tokenizer.next_content() != ')':            
+            params.append(self.get_contents(2))                    # variable type and name
             if self.tokenizer.next_content() != ')':  # ,
                 self.eat(",") 
-        return n_params
+        return params
 
-    def compile_var_dec(self):    # variable declaration
-        self.opentag("varDec")
-
-        declaration_info = self.get_contents(3)
-        skind = declaration_info[0] # var
-        stype = declaration_info[1] # type
-        sname = declaration_info[2] # first declared variable name
-
+    def compile_var_dec(self):    
+        [skind, stype, sname] = self.get_contents(3)
+        
         self.declare_symbol(skind, stype, sname)
         
         while (self.tokenizer.next_content() != ';'):
             self.eat(",")
-            sname = self.get_contents(1)[0] # next variable names
+            sname = self.get_content() 
             self.declare_symbol(skind, stype, sname)
+        
         self.eat(";")
-        self.closetag("varDec")
+        
 
     
     def compile_statement(self):
@@ -202,9 +208,9 @@ class CompilationEngine:
         self.opentag("letStatement")
 
         self.eat("let")                          # let
-        sname = self.get_contents(1)[0]          # variable name
+        sname = self.get_content()               # variable name
         self.lookup_and_write(sname)
-        #self.next_terminals(1)                   # variable name
+        
         if self.tokenizer.next_content() == '[': # possible array index
             self.eat('[')
             self.compile_expression()
@@ -239,35 +245,39 @@ class CompilationEngine:
         self.closetag("ifStatement")
 
     def compile_do_statement(self):
-        self.opentag("doStatement")
         self.eat("do")                   # do
-        sname = self.get_contents(1)[0]  # read first identifier
+        sname = self.get_content()       # read first identifier        
+        fullname, n_params = self.get_call_info(sname)    # possibly add .identifier2, and (parameterlist)
+        self.write.call(fullname, n_params)
+        if False:      # TODO case of void function: caller must pop dummy return value
+            self.write.pop("temp", 0)
+        self.eat(";")                         # ;
         
-        self.finish_subroutine_call(sname)    # possibly add .identifier2, and (parameterlist)
-        self.eat(";")                    # ;
-        self.closetag("doStatement")
 
-    """This method finishes a subroutine call, after having read the first name"""
-    def finish_subroutine_call(self, firstname):
+    """This method gets the full info of a subroutine call, after having read the first name,
+    and returns a list containing the full subroutine name, and the number of passed parameters."""
+    def get_call_info(self, firstname):
+        fullname = firstname
         if self.tokenizer.next_content() == '.': 
             self.eat(".")                              # .
-            secondname = self.get_contents(1)[0]       # read subroutine name
-            self.write_identifier(firstname, "class", False, "class", -1)
-            self.write_identifier(secondname, "subroutine", False, "subroutine", -1)
-        else: # otherwise the firstname was already a subroutine name within this class
-            self.write_identifier(firstname, "subroutine", False, "subroutine", -1)
+            secondname = self.get_content()            # read subroutine name
+            fullname += "." + secondname
+        
         self.eat("(")
-        self.compile_expression_list()   # expressions to go into parameters
+        n_params = self.compile_expression_list()   # push expressions for parameters onto stack
         self.eat(")")
 
-    
+        return fullname, n_params
+
+    '''Pushes expressions in list onto stack, one by one'''
     def compile_expression_list(self):
-        self.opentag("expressionList")
+        n = 0
         while self.tokenizer.next_content() != ')':
+            n += 1
             self.compile_expression()
             if self.tokenizer.next_content() == ',':
                 self.eat(",")
-        self.closetag("expressionList")
+        return n
 
     def compile_while_statement(self):
         self.opentag("whileStatement")
@@ -287,39 +297,44 @@ class CompilationEngine:
         self.closetag("statements")
 
     def compile_return_statement(self):
-        self.opentag("returnStatement")
         self.eat("return")                # return
         if self.tokenizer.next_content() != ";":
             self.compile_expression()     # expression
         self.eat(";")                     # ;
-        self.closetag("returnStatement")
-
-    def compile_expression(self):
-        self.opentag("expression")
+        self.write.ret()
         
+    '''Pushes the result of evaluating the next expression on top of the stack'''
+    def compile_expression(self):
         # expression is a term, possibly followed by a number of repetitions of (op term)
         self.compile_term()
         while self.tokenizer.next_content() in JACK_BINARY_OP:
-            self.next_terminals(1)
+            operation = self.get_content()
             self.compile_term()
+            self.write.arithmetic(VM_BINARY_OP_NAME[operation])
 
-        self.closetag("expression")
-    
     def lookup_and_write(self, sname):
         record = self.symboltable.get_record(sname)
         self.write_identifier(sname,record["kind"],False,record["type"],record["index"])
 
+    def lookup_and_push(self, sname):
+        record = self.symboltable.get_record(sname)
+        segment = VM_SEGMENT_NAME[record["kind"]]
+        self.write.push(segment, record["index"])
+
+    '''Pushes the result of evaluating the term on top of the stack'''
     def compile_term(self):
         self.opentag("term")
         
         # first checks:
         # is the term a constant
         if self.tokenizer.next_token.is_constant():
-            self.next_terminals(1)
-        # is it a unary operator
+            value = self.get_content()
+            self.write.push("constant ", value)
+        # is it unary operator applied to a term
         elif self.tokenizer.next_content() in JACK_UNARY_OP:
-            self.next_terminals(1)
+            operation = self.get_content()
             self.compile_term()
+            self.write.arithmetic(VM_UNARY_OP_NAME[operation])
         # is it a (expression)
         elif self.tokenizer.next_content() == '(':
             self.eat('(')
@@ -329,19 +344,20 @@ class CompilationEngine:
         # if we did not succeed yet, then we must be reading an identifier
         # we look ahead to the next symbol, which can be [, (, ., or something else
         else:
-            sname = self.get_contents(1)[0]  # get the identifier
-            # the identifier names an array 
+            sname = self.get_content()  # get the identifier
+            # the identifier names an array TODO
             if self.tokenizer.next_content() == '[':
                 self.lookup_and_write(sname)
                 self.eat('[')
                 self.compile_expression()
                 self.eat(']')
-            # the identifier is part of a subroutine call
+            # the identifier is part of a subroutine call TODO
             elif self.tokenizer.next_content() == '.' or self.tokenizer.next_content() == '(': 
-                self.finish_subroutine_call(sname)
+                self.get_call_info(sname)
             else:
-            # if we are in none of these cases,  then the identifier must have been a varname, so we look it up
-                self.lookup_and_write(sname)
+            # if we are in none of these cases, then the identifier must have been a simple varname, 
+            # so we look it up and push it to the stack
+                self.lookup_and_push(sname)
                 
 
         self.closetag("term")
