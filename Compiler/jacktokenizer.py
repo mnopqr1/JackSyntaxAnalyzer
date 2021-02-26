@@ -3,7 +3,6 @@ from jacktoken import Token
 
 JACK_SYMBOLS = "\{\}()\[\].,;+-*/&|<>=~"
 JACK_WHITE = " \n\t"
-SPECIAL_TOKENS = {"<" : "&lt;", ">" : "&gt;", "&" : "&amp;"}
 
 class JackTokenizer:
     current_token = None
@@ -143,10 +142,7 @@ class JackTokenizer:
 
     def content(self):
         assert self.current_token != None
-        if self.current_token.content in "<>&":
-            return SPECIAL_TOKENS[self.current_token.content]
-        else:
-            return self.current_token.content
+        return self.current_token.content
 
     def next_ttype(self):
         return self.next_token.token_type

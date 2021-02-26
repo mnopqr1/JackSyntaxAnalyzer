@@ -33,7 +33,7 @@ class CompilationEngine:
     # constructor
     def __init__(self, filename):
         self.tokenizer = JackTokenizer(filename)
-        self.write = VMWriter(filename[:-4] + "vm")
+        self.writer = VMWriter(filename[:-4] + "vm")
         self.outfile = open("dummyfile", 'w')
         self.classname = None
 
@@ -155,14 +155,12 @@ class CompilationEngine:
         while (self.tokenizer.next_content() not in JACK_STATEMENT_KEYWORDS): # variable declarations
             self.compile_var_dec()
 
-        self.opentag("statements")
         while (self.tokenizer.next_content() != '}'):                         # statements
             self.compile_statement()
-        self.closetag("statements")
 
         self.eat("}")                                                         # }
-        
-
+        self.writer.putnow("function " + self.classname + "." + sname + " " + str(self.symboltable.assign_next["var"]))
+        self.writer.flush()
         
 
     '''returns the list of parameters as a list of lists [vartype, varname]'''
@@ -248,9 +246,8 @@ class CompilationEngine:
         self.eat("do")                   # do
         sname = self.get_content()       # read first identifier        
         fullname, n_params = self.get_call_info(sname)    # possibly add .identifier2, and (parameterlist)
-        self.write.call(fullname, n_params)
-        if False:      # TODO case of void function: caller must pop dummy return value
-            self.write.pop("temp", 0)
+        self.writer.call(fullname, n_params)
+        self.writer.pop("temp", 0)        # dump return value (do statement treats called function as void)
         self.eat(";")                         # ;
         
 
@@ -300,8 +297,10 @@ class CompilationEngine:
         self.eat("return")                # return
         if self.tokenizer.next_content() != ";":
             self.compile_expression()     # expression
+        else:
+            self.writer.push("constant", 0) # for a void function, push constant 0 as return value
         self.eat(";")                     # ;
-        self.write.ret()
+        self.writer.ret()
         
     '''Pushes the result of evaluating the next expression on top of the stack'''
     def compile_expression(self):
@@ -310,7 +309,7 @@ class CompilationEngine:
         while self.tokenizer.next_content() in JACK_BINARY_OP:
             operation = self.get_content()
             self.compile_term()
-            self.write.arithmetic(VM_BINARY_OP_NAME[operation])
+            self.writer.arithmetic(VM_BINARY_OP_NAME[operation])
 
     def lookup_and_write(self, sname):
         record = self.symboltable.get_record(sname)
@@ -319,7 +318,7 @@ class CompilationEngine:
     def lookup_and_push(self, sname):
         record = self.symboltable.get_record(sname)
         segment = VM_SEGMENT_NAME[record["kind"]]
-        self.write.push(segment, record["index"])
+        self.writer.push(segment, record["index"])
 
     '''Pushes the result of evaluating the term on top of the stack'''
     def compile_term(self):
@@ -329,12 +328,12 @@ class CompilationEngine:
         # is the term a constant
         if self.tokenizer.next_token.is_constant():
             value = self.get_content()
-            self.write.push("constant ", value)
+            self.writer.push("constant", value)
         # is it unary operator applied to a term
         elif self.tokenizer.next_content() in JACK_UNARY_OP:
             operation = self.get_content()
             self.compile_term()
-            self.write.arithmetic(VM_UNARY_OP_NAME[operation])
+            self.writer.arithmetic(VM_UNARY_OP_NAME[operation])
         # is it a (expression)
         elif self.tokenizer.next_content() == '(':
             self.eat('(')

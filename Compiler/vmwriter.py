@@ -2,33 +2,41 @@ class VMWriter:
 
     def __init__(self, filename):
         self.file = open(filename, 'w')
+        self.buffer = ""
     
+    def putnow(self, string):
+        self.file.write(string + "\n")
+
+    def flush(self):
+        self.file.write(self.buffer)
+        self.buffer = ""
+
     def push(self, segment, index):
-        self.file.write("push " + segment + str(index) + "\n")
+        self.buffer += "push " + segment + " " + str(index) + "\n"
     
     def pop(self, segment, index):
-        self.file.write("pop " + segment + str(index) + "\n")
+        self.buffer += "pop " + segment + " " + str(index) + "\n"
     
     def arithmetic(self, command):
-        self.file.write(command + "\n")
+        self.buffer += command + "\n"
 
     def label(self, name):
-        self.file.write("label " + name + "\n")
+        self.buffer += "label " + name + "\n"
     
     def goto(self, name):
-        self.file.write("goto " + name + "\n")
+        self.buffer += "goto " + name + "\n"
     
     def ifgoto(self, name):
-        self.file.write("if-goto " + name + "\n")
+        self.buffer += "if-goto " + name + "\n"
     
     def call(self, name, n_args):
-        self.file.write("call " + name + " " + str(n_args) + "\n")
+        self.buffer += "call " + name + " " + str(n_args) + "\n"
     
     def function(self, name, n_locals):
-        self.file.write("function " + name + str(n_locals) + "\n")
+        self.buffer += "function " + name + str(n_locals) + "\n"
 
     def ret(self):
-        self.file.write("return\n")
+        self.buffer += "return\n"
     
     def close(self):
         self.file.close()
