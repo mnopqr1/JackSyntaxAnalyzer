@@ -62,7 +62,6 @@ class CompilationEngine:
         for word in s.split(" "):
             assert self.tokenizer.next_content() == word, self.get_error(word)
             self.tokenizer.advance()
-            # self.next_terminals(1)
 
     def next_terminals(self, n):
         for i in range(0,n):
@@ -121,12 +120,8 @@ class CompilationEngine:
 
     def compile_class_var_dec(self):  # class variable declaration
         assert self.tokenizer.next_content() == "static" or self.tokenizer.next_content() == "field"
-        self.opentag("classVarDec")
         
-        identifier_info = self.get_contents(3) # static or field, type declaration, identifier name
-        skind = identifier_info[0]
-        stype = identifier_info[1]
-        sname = identifier_info[2]
+        [skind, stype, sname] = self.get_contents(3) # static or field, type declaration, identifier name
         self.declare_symbol(skind, stype, sname)
         
         while (self.tokenizer.next_content() == ","):
@@ -135,8 +130,6 @@ class CompilationEngine:
             self.declare_symbol(skind, stype, sname)
 
         self.eat(";")
-        
-        self.closetag("classVarDec")
 
     def compile_subroutine_dec(self):                                         
         [skind, rettype, sname] = self.get_contents(3)                        # subroutine kind, return type, name
@@ -147,10 +140,17 @@ class CompilationEngine:
 
         self.symboltable.start_subroutine()
         
-        for param in params:
+        for param in params:                                                  # add parameter names to symbol table as arguments
             self.symboltable.define(param[1], param[0], "arg")
 
+        if skind == "constructor":
+            self.new_object()
+            self.set_this_base()
         
+        if skind == "method":
+            self.set_this_base()
+            self.symboltable.define("this", self.classname, "arg")
+
         self.eat("{")
         while (self.tokenizer.next_content() not in JACK_STATEMENT_KEYWORDS): # variable declarations
             self.compile_var_dec()
@@ -162,6 +162,11 @@ class CompilationEngine:
         self.writer.putnow("function " + self.classname + "." + sname + " " + str(self.symboltable.assign_next["var"]))
         self.writer.flush()
         
+    def new_object(self): #TODO allocate memory block for new object, leave address on top of stack
+        pass
+
+    def set_this_base(self): # pops address from top of stack into pointer 0
+        self.writer.pop("pointer", 0)
 
     '''returns the list of parameters as a list of lists [vartype, varname]'''
     def compile_parameter_list(self):
@@ -202,7 +207,7 @@ class CompilationEngine:
         if statement_type == "return":
             self.compile_return_statement()
 
-    def compile_let_statement(self):
+    def compile_let_statement(self): #TODO
         self.opentag("letStatement")
 
         self.eat("let")                          # let
@@ -245,26 +250,30 @@ class CompilationEngine:
     def compile_do_statement(self):
         self.eat("do")                   # do
         sname = self.get_content()       # read first identifier        
-        fullname, n_params = self.get_call_info(sname)    # possibly add .identifier2, and (parameterlist)
-        self.writer.call(fullname, n_params)
+        self.compile_call(sname)         # possibly add .identifier2, push parameterlist onto stack and call
+        
         self.writer.pop("temp", 0)        # dump return value (do statement treats called function as void)
         self.eat(";")                         # ;
         
 
     """This method gets the full info of a subroutine call, after having read the first name,
     and returns a list containing the full subroutine name, and the number of passed parameters."""
-    def get_call_info(self, firstname):
+    def compile_call(self, firstname):
         fullname = firstname
         if self.tokenizer.next_content() == '.': 
             self.eat(".")                              # .
             secondname = self.get_content()            # read subroutine name
             fullname += "." + secondname
+            if firstname[0].islower(): # in this case we're calling an object method, need to pass that object as first arg
+                objkind = self.symboltable.kind_of(firstname)
+                objindex = self.symboltable.index_of(firstname)
+                self.writer.push(VM_SEGMENT_NAME[objkind], objindex)
         
         self.eat("(")
         n_params = self.compile_expression_list()   # push expressions for parameters onto stack
         self.eat(")")
+        self.writer.call(fullname, n_params)
 
-        return fullname, n_params
 
     '''Pushes expressions in list onto stack, one by one'''
     def compile_expression_list(self):
@@ -352,7 +361,7 @@ class CompilationEngine:
                 self.eat(']')
             # the identifier is part of a subroutine call TODO
             elif self.tokenizer.next_content() == '.' or self.tokenizer.next_content() == '(': 
-                self.get_call_info(sname)
+                self.compile_call(sname)
             else:
             # if we are in none of these cases, then the identifier must have been a simple varname, 
             # so we look it up and push it to the stack
