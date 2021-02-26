@@ -20,15 +20,6 @@ JACK_BINARY_OP = "+-*/&|<>="
 INDENT_SIZE = 2
 
 
-"""Where I left this Thursday 25 March 9pm:
-* started making transition from writing XML file to VM file
-* wrote vmwriter class
-* need to rework all the compile-methods to write VM code
-* rewrote compileclass
-* started with the compilefunction method --> need to work on this
-"""
-
-
 class CompilationEngine:
     # constructor
     def __init__(self, filename):
@@ -60,7 +51,8 @@ class CompilationEngine:
 
     def eat(self, s):
         for word in s.split(" "):
-            assert self.tokenizer.next_content() == word, self.get_error(word)
+            if self.tokenizer.next_content() != word:
+                raise ValueError(self.get_error(word))
             self.tokenizer.advance()
 
     def next_terminals(self, n):
@@ -104,19 +96,19 @@ class CompilationEngine:
         self.eat("}")                            # }
 
 
-    def write_identifier(self, sname, skind, being_defined, stype, index):
+    def write_identifier(self, sname, skind, being_defined, stype, idx):
         self.opentag("identifier")
         self.writeintag("name",sname)
         self.writeintag("kind",skind)
         self.writeintag("isdefinition",str(being_defined))
         self.writeintag("type",stype)
-        self.writeintag("index",str(index))
+        self.writeintag("idx",str(idx))
         self.closetag("identifier")
 
     def declare_symbol(self, skind, stype, sname):
         self.symboltable.define(sname, stype, skind)
         record = self.symboltable.get_record(sname)
-        self.write_identifier(sname, record["kind"], True, record["type"], record["index"])
+        self.write_identifier(sname, record["kind"], True, record["type"], record["idx"])
 
     def compile_class_var_dec(self):  # class variable declaration
         assert self.tokenizer.next_content() == "static" or self.tokenizer.next_content() == "field"
@@ -207,25 +199,43 @@ class CompilationEngine:
         if statement_type == "return":
             self.compile_return_statement()
 
-    def compile_let_statement(self): #TODO
-        self.opentag("letStatement")
 
+    def compile_let_statement(self): #TODO
         self.eat("let")                          # let
         sname = self.get_content()               # variable name
-        self.lookup_and_write(sname)
+        stype, skind, idx = self.symboltable.get_record(sname).values()
         
-        if self.tokenizer.next_content() == '[': # possible array index
+        if self.tokenizer.next_content() == '[': # possible array idx
             self.eat('[')
             self.compile_expression()
+            # pop it to temp 1
             self.eat(']')
 
         self.eat('=')                            # =
 
-        self.compile_expression()                # expression
-        
+        self.compile_expression()                # push value of expression on top of stack
+        self.writer.pop(VM_SEGMENT_NAME[skind], idx) # pop into variable segment of the sname variable
+
         self.eat(';')                            # ;
 
-        self.closetag("letStatement")
+# let a[complicated_expression] = 10 * complicated_method(b[5]) - 3
+
+# look up the segment & idx of a, 
+# this place in memory will contain an address for the beginning of the array a
+
+# compile the expression for the array index that we want to access
+# pop temp 1      -> store that array index in temp 1
+
+# compile the expression on the right hand side
+
+# push segment idx
+# push constant 4
+# add
+# pop pointer 1 -> sets "that" to the right location
+# pop that 0 -> take the computed expression from the stack and put it in "that"
+
+
+
 
     def compile_if_statement(self):
         self.opentag("ifStatement")
@@ -266,8 +276,8 @@ class CompilationEngine:
             fullname += "." + secondname
             if firstname[0].islower(): # in this case we're calling an object method, need to pass that object as first arg
                 objkind = self.symboltable.kind_of(firstname)
-                objindex = self.symboltable.index_of(firstname)
-                self.writer.push(VM_SEGMENT_NAME[objkind], objindex)
+                objidx = self.symboltable.idx_of(firstname)
+                self.writer.push(VM_SEGMENT_NAME[objkind], objidx)
         
         self.eat("(")
         n_params = self.compile_expression_list()   # push expressions for parameters onto stack
@@ -322,17 +332,15 @@ class CompilationEngine:
 
     def lookup_and_write(self, sname):
         record = self.symboltable.get_record(sname)
-        self.write_identifier(sname,record["kind"],False,record["type"],record["index"])
+        self.write_identifier(sname,record["kind"],False,record["type"],record["idx"])
 
     def lookup_and_push(self, sname):
         record = self.symboltable.get_record(sname)
         segment = VM_SEGMENT_NAME[record["kind"]]
-        self.writer.push(segment, record["index"])
+        self.writer.push(segment, record["idx"])
 
     '''Pushes the result of evaluating the term on top of the stack'''
-    def compile_term(self):
-        self.opentag("term")
-        
+    def compile_term(self):        
         # first checks:
         # is the term a constant
         if self.tokenizer.next_token.is_constant():
@@ -367,5 +375,3 @@ class CompilationEngine:
             # so we look it up and push it to the stack
                 self.lookup_and_push(sname)
                 
-
-        self.closetag("term")

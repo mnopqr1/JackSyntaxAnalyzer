@@ -11,11 +11,11 @@ class VMWriter:
         self.file.write(self.buffer)
         self.buffer = ""
 
-    def push(self, segment, index):
-        self.buffer += "push " + segment + " " + str(index) + "\n"
+    def push(self, segment, idx):
+        self.buffer += "push " + segment + " " + str(idx) + "\n"
     
-    def pop(self, segment, index):
-        self.buffer += "pop " + segment + " " + str(index) + "\n"
+    def pop(self, segment, idx):
+        self.buffer += "pop " + segment + " " + str(idx) + "\n"
     
     def arithmetic(self, command):
         self.buffer += command + "\n"
