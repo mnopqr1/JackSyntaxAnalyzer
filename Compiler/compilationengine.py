@@ -26,7 +26,6 @@ class CompilationEngine:
     def __init__(self, filename):
         self.writer = VMWriter(filename[:-4] + "vm")
         self.tokenizer = JackTokenizer(filename)
-        self.outfile = open("dummyfile", 'w')
         self.classname = None
 
         self.next_label = 1
@@ -266,16 +265,18 @@ class CompilationEngine:
     and returns a list containing the full subroutine name, and the number of passed parameters."""
 
     def compile_call(self, firstname):
-        fullname = firstname
+        
         if self.tokenizer.next_content() == '.':
             self.eat(".")                              # .
             secondname = self.get_content()            # read subroutine name
-            fullname += "." + secondname
+            fullname = firstname + "." + secondname
             # in this case we're calling an object method, need to pass that object as first arg
             if firstname[0].islower():
                 objkind = self.symboltable.kind_of(firstname)
                 objidx = self.symboltable.idx_of(firstname)
                 self.writer.push(VM_SEGMENT_NAME[objkind], objidx)
+        else:
+            fullname = self.classname + "." + firstname     # bug fix: need to explicitly add the class name when calling subroutine from this class
 
         self.eat("(")
         # push expressions for parameters onto stack
