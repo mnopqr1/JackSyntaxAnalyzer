@@ -44,5 +44,8 @@ class SymbolTable:
     def idx_of(self, sname):
         return self.get_record(sname)["idx"]
 
-
-    
+    def diagnostics(self):
+        print("symboltable class: ") 
+        print(self.class_table)
+        print("symboltable subroutine: ") 
+        print(self.subroutine_table)

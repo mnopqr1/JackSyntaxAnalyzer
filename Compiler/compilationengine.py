@@ -119,11 +119,9 @@ class CompilationEngine:
         for param in params:
             self.symboltable.define(param[1], param[0], "arg")
 
-        print("subroutine: " + sname)
-        print("symboltable class: ") 
-        print(self.symboltable.class_table)
-        print("symboltable subroutine: ") 
-        print(self.symboltable.subroutine_table)
+        # print("current subroutine: " + sname)
+        # self.symboltable.diagnostics()
+
         if skind == "constructor":
             self.new_object()
             self.set_this_base()
@@ -349,6 +347,21 @@ class CompilationEngine:
         segment = VM_SEGMENT_NAME[record["kind"]]
         self.writer.push(segment, record["idx"])
 
+    """Creates a new string constant containing "content"
+    and pushes its address on top of the stack"""
+    def create_string(self, content):
+        # tell OS to create a new string of len(content) characters
+        self.writer.push("constant", len(content))
+        self.writer.call("String.new", 1)
+        # the new string's base address is now on top of the stack
+        for c in content:
+            self.writer.push("constant", ord(c)) # push the character's ascii ordinal
+            self.writer.call("String.appendChar", 2) # call the method on the string
+            # the return value is again the string's base address, 
+            # which may be used for the next character
+        # at the end, we have the new string's base address on top of the stack
+
+
     def compile_constant_term(self):
         self.tokenizer.advance()
         const_token = self.tokenizer.current_token
@@ -359,7 +372,7 @@ class CompilationEngine:
         if const_token.token_type == "integerConstant":
             self.writer.push("constant", const_token.content)
         elif const_token.token_type == "stringConstant":
-            return #TODO need to find out how OS.String works
+            self.create_string(const_token.content)
         elif const_token.content == "this":
             self.writer.push("pointer", 0)
         elif const_token.content in ["false", "null"]:

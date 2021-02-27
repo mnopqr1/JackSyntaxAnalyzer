@@ -18,14 +18,15 @@ push pointer 0
 return
 function Bat.dispose 0
 pop pointer 0
-push constant this
+push pointer 0
 call Memory.deAlloc 1
 pop temp 0
 push constant 0
 return
 function Bat.show 0
 pop pointer 0
-push constant true
+push constant 0
+not
 call Screen.setColor 1
 pop temp 0
 call draw 0
@@ -34,7 +35,7 @@ push constant 0
 return
 function Bat.hide 0
 pop pointer 0
-push constant false
+push constant 0
 call Screen.setColor 1
 pop temp 0
 call draw 0
@@ -57,7 +58,7 @@ push constant 0
 return
 function Bat.setDirection 0
 pop pointer 0
-push argument 8
+push argument 0
 pop this 4
 push constant 0
 return
@@ -75,7 +76,7 @@ function Bat.setWidth 0
 pop pointer 0
 call hide 0
 pop temp 0
-push argument 12
+push argument 0
 pop this 2
 call show 0
 pop temp 0
@@ -102,7 +103,7 @@ pop this 0
 goto L4
 label L3
 label L4
-push constant false
+push constant 0
 call Screen.setColor 1
 pop temp 0
 push this 0
@@ -121,7 +122,8 @@ push this 3
 add
 call Screen.drawRectangle 4
 pop temp 0
-push constant true
+push constant 0
+not
 call Screen.setColor 1
 pop temp 0
 push this 0
@@ -154,7 +156,7 @@ pop this 0
 goto L6
 label L5
 label L6
-push constant false
+push constant 0
 call Screen.setColor 1
 pop temp 0
 push this 0
@@ -169,7 +171,8 @@ push this 3
 add
 call Screen.drawRectangle 4
 pop temp 0
-push constant true
+push constant 0
+not
 call Screen.setColor 1
 pop temp 0
 push this 0

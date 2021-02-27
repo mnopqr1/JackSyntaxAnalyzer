@@ -26,14 +26,15 @@ push pointer 0
 return
 function Ball.dispose 0
 pop pointer 0
-push constant this
+push pointer 0
 call Memory.deAlloc 1
 pop temp 0
 push constant 0
 return
 function Ball.show 0
 pop pointer 0
-push constant true
+push constant 0
+not
 call Screen.setColor 1
 pop temp 0
 call draw 0
@@ -42,7 +43,7 @@ push constant 0
 return
 function Ball.hide 0
 pop pointer 0
-push constant false
+push constant 0
 call Screen.setColor 1
 pop temp 0
 call draw 0
@@ -75,11 +76,11 @@ add
 return
 function Ball.setDestination 3
 pop pointer 0
-push argument 12
+push argument 0
 push this 0
 sub
 pop this 2
-push argument 13
+push argument 1
 push this 1
 sub
 pop this 3
@@ -103,21 +104,21 @@ pop local 0
 push local 2
 pop local 1
 push this 1
-push argument 13
+push argument 1
 lt
 pop this 8
 push this 0
-push argument 12
+push argument 0
 lt
 pop this 9
 goto L2
 label L1
 push this 0
-push argument 12
+push argument 0
 lt
 pop this 8
 push this 1
-push argument 13
+push argument 1
 lt
 pop this 9
 label L2
@@ -139,7 +140,7 @@ call Math.multiply 2
 pop this 6
 push constant 0
 return
-function Ball.move 3
+function Ball.move 0
 pop pointer 0
 call hide 0
 pop temp 0
@@ -283,37 +284,37 @@ call show 0
 pop temp 0
 push this 14
 return
-function Ball.bounce 8
+function Ball.bounce 5
 pop pointer 0
 push this 2
 push constant 10
 call Math.divide 2
-pop local 5
+pop local 2
 push this 3
 push constant 10
 call Math.divide 2
-pop local 6
-push argument 16
+pop local 3
+push argument 0
 push constant 0
 eq
 not
 if-goto L25
 push constant 10
-pop local 7
+pop local 4
 goto L26
 label L25
 push this 2
 push constant 0
 lt
 not
-push argument 16
+push argument 0
 push constant 1
 eq
 and
 push this 2
 push constant 0
 lt
-push argument 16
+push argument 0
 push constant 1
 neg
 eq
@@ -322,11 +323,11 @@ or
 not
 if-goto L27
 push constant 20
-pop local 7
+pop local 4
 goto L28
 label L27
 push constant 5
-pop local 7
+pop local 4
 label L28
 label L26
 push this 14
@@ -335,20 +336,20 @@ eq
 not
 if-goto L29
 push constant 506
-pop local 3
-push local 6
+pop local 0
+push local 3
 push constant 50
 neg
 call Math.multiply 2
-push local 5
+push local 2
 call Math.divide 2
-pop local 4
+pop local 1
 push this 1
+push local 1
 push local 4
-push local 7
 call Math.multiply 2
 add
-pop local 4
+pop local 1
 goto L30
 label L29
 push this 14
@@ -357,19 +358,19 @@ eq
 not
 if-goto L31
 push constant 0
-pop local 3
-push local 6
+pop local 0
+push local 3
 push constant 50
 call Math.multiply 2
-push local 5
+push local 2
 call Math.divide 2
-pop local 4
+pop local 1
 push this 1
+push local 1
 push local 4
-push local 7
 call Math.multiply 2
 add
-pop local 4
+pop local 1
 goto L32
 label L31
 push this 14
@@ -378,41 +379,41 @@ eq
 not
 if-goto L33
 push constant 250
-pop local 4
-push local 5
+pop local 1
+push local 2
 push constant 25
 neg
 call Math.multiply 2
-push local 6
-call Math.divide 2
-pop local 3
-push this 0
 push local 3
-push local 7
+call Math.divide 2
+pop local 0
+push this 0
+push local 0
+push local 4
 call Math.multiply 2
 add
-pop local 3
+pop local 0
 goto L34
 label L33
 push constant 0
-pop local 4
-push local 5
+pop local 1
+push local 2
 push constant 25
 call Math.multiply 2
-push local 6
-call Math.divide 2
-pop local 3
-push this 0
 push local 3
-push local 7
+call Math.divide 2
+pop local 0
+push this 0
+push local 0
+push local 4
 call Math.multiply 2
 add
-pop local 3
+pop local 0
 label L34
 label L32
 label L30
-push local 3
-push local 4
+push local 0
+push local 1
 call setDestination 2
 pop temp 0
 push constant 0
