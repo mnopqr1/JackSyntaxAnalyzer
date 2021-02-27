@@ -119,6 +119,11 @@ class CompilationEngine:
         for param in params:
             self.symboltable.define(param[1], param[0], "arg")
 
+        print("subroutine: " + sname)
+        print("symboltable class: ") 
+        print(self.symboltable.class_table)
+        print("symboltable subroutine: ") 
+        print(self.symboltable.subroutine_table)
         if skind == "constructor":
             self.new_object()
             self.set_this_base()
@@ -339,24 +344,38 @@ class CompilationEngine:
             self.compile_term()
             self.writer.arithmetic(VM_BINARY_OP_NAME[operation])
 
-    def lookup_and_write(self, sname):
-        record = self.symboltable.get_record(sname)
-        self.write_identifier(
-            sname, record["kind"], False, record["type"], record["idx"])
-
     def lookup_and_push(self, sname):
         record = self.symboltable.get_record(sname)
         segment = VM_SEGMENT_NAME[record["kind"]]
         self.writer.push(segment, record["idx"])
 
-    '''Pushes the result of evaluating the term on top of the stack'''
+    def compile_constant_term(self):
+        self.tokenizer.advance()
+        const_token = self.tokenizer.current_token
 
+        if not const_token.is_constant():
+            raise ValueError("Expected constant token but found: " + const_token.content)
+
+        if const_token.token_type == "integerConstant":
+            self.writer.push("constant", const_token.content)
+        elif const_token.token_type == "stringConstant":
+            return #TODO need to find out how OS.String works
+        elif const_token.content == "this":
+            self.writer.push("pointer", 0)
+        elif const_token.content in ["false", "null"]:
+            self.writer.push("constant", 0)
+        elif const_token.content == "true":
+            self.writer.push("constant", 0)
+            self.writer.arithmetic("not")
+        else:
+            raise ValueError("Could not handle constant token : " + const_token.content)
+    
+    '''Pushes the result of evaluating the term on top of the stack'''
     def compile_term(self):
         # first checks:
         # is the term a constant
         if self.tokenizer.next_token.is_constant():
-            value = self.get_content()
-            self.writer.push("constant", value)
+            self.compile_constant_term()
         # is it unary operator applied to a term
         elif self.tokenizer.next_content() in JACK_UNARY_OP:
             operation = self.get_content()
@@ -372,13 +391,17 @@ class CompilationEngine:
         # we look ahead to the next symbol, which can be [, (, ., or something else
         else:
             sname = self.get_content()  # get the identifier
-            # the identifier names an array TODO
+            # the identifier names an array
             if self.tokenizer.next_content() == '[':
-                self.lookup_and_write(sname)
+                record = self.symboltable.get_record(sname)
                 self.eat('[')
                 self.compile_expression()
                 self.eat(']')
-            # the identifier is part of a subroutine call TODO
+                self.writer.push(VM_SEGMENT_NAME[record["kind"]], record["idx"]) # array base location
+                self.writer.arithmetic("add")
+                self.writer.pop("pointer", 1) # set "that" pointer to correct location
+                self.writer.push("that", 0)   # push that 0 onto stack
+            # the identifier is part of a subroutine call TODO check that this works?
             elif self.tokenizer.next_content() == '.' or self.tokenizer.next_content() == '(':
                 self.compile_call(sname)
             else:

@@ -13,28 +13,29 @@ call Main.convert 1
 pop temp 0
 push constant 0
 return
-function Main.convert 4
-push constant true
-pop local 3
+function Main.convert 3
+push constant 0
+not
+pop local 2
 label L1
-push local 3
+push local 2
 not
 if-goto L2
-push local 2
+push local 1
 push constant 1
 add
-pop local 2
-push local 1
-call Main.nextMask 1
 pop local 1
-push local 2
+push local 0
+call Main.nextMask 1
+pop local 0
+push local 1
 push constant 16
 gt
 not
 not
 if-goto L3
 push argument 0
-push local 1
+push local 0
 and
 push constant 0
 eq
@@ -42,7 +43,7 @@ not
 not
 if-goto L5
 push constant 8000
-push local 2
+push local 1
 add
 push constant 1
 call Memory.poke 2
@@ -50,7 +51,7 @@ pop temp 0
 goto L6
 label L5
 push constant 8000
-push local 2
+push local 1
 add
 push constant 0
 call Memory.poke 2
@@ -58,15 +59,15 @@ pop temp 0
 label L6
 goto L4
 label L3
-push constant false
-pop local 3
+push constant 0
+pop local 2
 label L4
 goto L1
 label L2
 push constant 0
 return
-function Main.nextMask 4
-push argument 1
+function Main.nextMask 0
+push argument 0
 push constant 0
 eq
 not
@@ -75,30 +76,30 @@ push constant 1
 return
 goto L8
 label L7
-push argument 1
+push argument 0
 push constant 2
 call Math.multiply 2
 return
 label L8
-function Main.fillMemory 4
+function Main.fillMemory 0
 label L9
-push argument 3
+push argument 1
 push constant 0
 gt
 not
 if-goto L10
+push argument 0
 push argument 2
-push argument 4
 call Memory.poke 2
 pop temp 0
-push argument 3
+push argument 1
 push constant 1
 sub
-pop argument 3
-push argument 2
+pop argument 1
+push argument 0
 push constant 1
 add
-pop argument 2
+pop argument 0
 goto L9
 label L10
 push constant 0

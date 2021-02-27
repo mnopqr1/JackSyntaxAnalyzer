@@ -6,6 +6,8 @@ class SymbolTable:
 
     def start_subroutine(self):
         self.subroutine_table = {}
+        self.assign_next["arg"] = 0
+        self.assign_next["var"] = 0
     
     '''Define a new identifier of given sname, stype and skind (static, field, arg or var)
     and assign a running idx to it'''
