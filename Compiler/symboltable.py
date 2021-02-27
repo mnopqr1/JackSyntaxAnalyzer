@@ -10,7 +10,8 @@ class SymbolTable:
     '''Define a new identifier of given sname, stype and skind (static, field, arg or var)
     and assign a running idx to it'''
     def define(self, sname, stype, skind):
-        assert skind in {"static", "field", "arg", "var"}, "Unrecognized identifier kind: must be static, field, arg or var"
+        if skind not in {"static", "field", "arg", "var"}:
+            raise ValueError("Unrecognized identifier kind: " + skind + ". Must be static, field, arg or var.")
         new_record = {"type" : stype, "kind" : skind, "idx" : self.assign_next[skind]}
         self.assign_next[skind] += 1
         if skind == "static" or skind == "field":

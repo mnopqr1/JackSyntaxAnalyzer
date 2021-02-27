@@ -40,3 +40,9 @@ class VMWriter:
     
     def close(self):
         self.file.close()
+
+    def comment(self, line):
+        self.buffer += "// " + line + "\n"
+    
+    def commentnow(self, line):
+        self.file.write("// " + line + "\n")

@@ -5,14 +5,6 @@ JACK_SYMBOLS = "\{\}()\[\].,;+-*/&|<>=~"
 JACK_WHITE = " \n\t"
 
 class JackTokenizer:
-    current_token = None
-    next_token = None
-
-    current_line = 0
-    current_comment_start_line = None
-    
-    file = None
-    filename = None
 
 
     # auxiliary method seek_comment_end:
@@ -41,6 +33,7 @@ class JackTokenizer:
             if c == '':
                 return None
             if c == ' ' or c == '\t':
+                self.linebuffer += c
                 continue
             elif c == '\n':
                 self.current_line += 1
@@ -57,9 +50,14 @@ class JackTokenizer:
                     self.file.seek(lastpos)
                     return '/'
             else:
+                self.linebuffer += c
                 return c
 
 
+    def getline(self):
+        buf = self.linebuffer
+        self.linebuffer = ""
+        return buf
 
     # main auxiliary method find_next_token:
     # sets the self.next_token field to a new Token read from self.file
@@ -85,26 +83,31 @@ class JackTokenizer:
 
         if not is_string:                # if we're not in a string, then the first char is part of token
             new_token_content += firstchar
+            
 
         # main character read loop
         while True:
             lastpos = self.file.tell()
             char = self.file.read(1)
-            if char == "\n":  # keep track of the line-count
+            
+            if char == "\n": 
                 self.current_line += 1
             
             if is_string: # if we are in a string, continue reading unless we see the closing "
+                self.linebuffer += char
                 if char == "\"":
                     self.next_token = Token("stringConstant", new_token_content)
                     break
                 else:
                     new_token_content += char
+                
             else: # if we are not in a string
                 if char in JACK_SYMBOLS or char in JACK_WHITE or char == "\"": # any symbol, whitespace, or " means the new token has ended
                     self.file.seek(lastpos)
                     self.next_token = Token.from_content(new_token_content)
                     break
                 else: # any other character should simply be added
+                    self.linebuffer += char
                     new_token_content += char
 
         if self.next_token == None:    
@@ -119,7 +122,16 @@ class JackTokenizer:
 
     # constructor
     def __init__(self, filename):
+        self.current_token = None
+        self.next_token = None
+
+        
+        self.current_line = 0
+        self.linebuffer = ""
+        self.current_comment_start_line = None
+
         self.filename = filename
+
         try:
             self.file = open(filename, 'r')
         except FileNotFoundError:

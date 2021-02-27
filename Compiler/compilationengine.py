@@ -4,17 +4,18 @@ from vmwriter import VMWriter
 
 JACK_SUBROUTINE_NAMES = ["constructor", "function", "method"]
 JACK_STATEMENT_KEYWORDS = ["if", "let", "while", "do", "return"]
-VM_SEGMENT_NAME = {"arg": "argument", "var": "local", "static": "static", "field": "this"}
-VM_UNARY_OP_NAME = {"-" : "neg", "~" : "not"}
-VM_BINARY_OP_NAME = {"+": "add", 
-                     "-": "sub", 
-                     "&": "and", 
-                     "|" : "or", 
-                     "<" : "lt", 
-                     ">" : "gt", 
-                     "=": "eq", 
-                     "*" : "call Math.multiply 2",
-                     "/" : "call Math.divide 2"}
+VM_SEGMENT_NAME = {"arg": "argument", "var": "local",
+                   "static": "static", "field": "this"}
+VM_UNARY_OP_NAME = {"-": "neg", "~": "not"}
+VM_BINARY_OP_NAME = {"+": "add",
+                     "-": "sub",
+                     "&": "and",
+                     "|": "or",
+                     "<": "lt",
+                     ">": "gt",
+                     "=": "eq",
+                     "*": "call Math.multiply 2",
+                     "/": "call Math.divide 2"}
 JACK_UNARY_OP = "-~"
 JACK_BINARY_OP = "+-*/&|<>="
 INDENT_SIZE = 2
@@ -23,30 +24,12 @@ INDENT_SIZE = 2
 class CompilationEngine:
     # constructor
     def __init__(self, filename):
-        self.tokenizer = JackTokenizer(filename)
         self.writer = VMWriter(filename[:-4] + "vm")
+        self.tokenizer = JackTokenizer(filename)
         self.outfile = open("dummyfile", 'w')
         self.classname = None
 
-        self.current_level = 0
-
-    
-    # advance & write functions:
-    # open xml tag, close xml tag, write terminal symbol, eat some terminal symbols
-    def opentag(self, tagname):
-        self.outfile.write(" " * self.current_level * INDENT_SIZE + "<" + tagname + ">" + "\n")
-        self.current_level += 1
-
-    def closetag(self, tagname):
-        self.current_level -= 1
-        self.outfile.write(" " * self.current_level * INDENT_SIZE + "</" + tagname + ">" + "\n")
-    
-
-    def write_terminal(self, ttype, content):
-        self.outfile.write(" " * self.current_level * INDENT_SIZE + "<" + ttype + "> " + content + " </" + ttype + ">" + "\n")
-
-    def writeintag(self, tagname, tagcontent):
-        self.outfile.write(" " * self.current_level * INDENT_SIZE + "<" + tagname + "> " + tagcontent + " </"+ tagname + ">\n")
+        self.next_label = 1
 
 
     def eat(self, s):
@@ -56,12 +39,12 @@ class CompilationEngine:
             self.tokenizer.advance()
 
     def next_terminals(self, n):
-        for i in range(0,n):
+        for i in range(0, n):
             self.tokenizer.advance()
 
     def get_contents(self, n):
         contents = []
-        for i in range(0,n):
+        for i in range(0, n):
             self.tokenizer.advance()
             contents.append(self.tokenizer.content())
         return contents
@@ -73,19 +56,26 @@ class CompilationEngine:
     # error message when trying to eat
     def get_error(self, s):
         return "while writing class " + self.classname + \
-        ", expected token " + s + \
-        ", but found token " + \
-        self.tokenizer.next_content() + \
-        " on line " + str(self.tokenizer.current_line)
+            ", expected token " + s + \
+            ", but found token " + \
+            self.tokenizer.next_content() + \
+            " on line " + str(self.tokenizer.current_line)
+
+    # adds current Jack code line as a comment to buffer
+    def commentline(self):
+        self.writer.comment(self.tokenizer.getline())
+    
+    def commentlinenow(self):
+        self.writer.commentnow(self.tokenizer.getline())
 
     def compile_class(self):
         self.symboltable = SymbolTable()
         self.eat("class")                       # class
-        self.classname = self.get_content()     # name        
+        self.classname = self.get_content()     # name
         self.eat("{")                           # {
-        
+
         # variable declarations
-        while (self.tokenizer.next_content() != '}' and 
+        while (self.tokenizer.next_content() != '}' and
                self.tokenizer.next_token.content not in JACK_SUBROUTINE_NAMES):
             self.compile_class_var_dec()
 
@@ -96,96 +86,93 @@ class CompilationEngine:
         self.eat("}")                            # }
 
 
-    def write_identifier(self, sname, skind, being_defined, stype, idx):
-        self.opentag("identifier")
-        self.writeintag("name",sname)
-        self.writeintag("kind",skind)
-        self.writeintag("isdefinition",str(being_defined))
-        self.writeintag("type",stype)
-        self.writeintag("idx",str(idx))
-        self.closetag("identifier")
-
-    def declare_symbol(self, skind, stype, sname):
-        self.symboltable.define(sname, stype, skind)
-        record = self.symboltable.get_record(sname)
-        self.write_identifier(sname, record["kind"], True, record["type"], record["idx"])
+        # record = self.symboltable.get_record(sname)
+        # self.write_identifier(sname, record["kind"], True, record["type"], record["idx"])
 
     def compile_class_var_dec(self):  # class variable declaration
-        assert self.tokenizer.next_content() == "static" or self.tokenizer.next_content() == "field"
-        
-        [skind, stype, sname] = self.get_contents(3) # static or field, type declaration, identifier name
-        self.declare_symbol(skind, stype, sname)
-        
+        if not (self.tokenizer.next_content() == "static" or self.tokenizer.next_content() == "field"):
+            raise ValueError("Expected static or field, but found " + self.tokenizer.next_content())
+
+        # static or field, type declaration, identifier name
+        [skind, stype, sname] = self.get_contents(3)
+        self.symboltable.define(sname, stype, skind)
+
         while (self.tokenizer.next_content() == ","):
             self.eat(",")
-            sname = self.get_contents(1)
-            self.declare_symbol(skind, stype, sname)
+            sname = self.get_content()
+            self.symboltable.define(sname, stype, skind)
 
         self.eat(";")
 
-    def compile_subroutine_dec(self):                                         
-        [skind, rettype, sname] = self.get_contents(3)                        # subroutine kind, return type, name
-                
-        self.eat("(")                                                         # get parameters
-        params = self.compile_parameter_list()                                                                       
+    def compile_subroutine_dec(self):
+        # subroutine kind, return type, name
+        [skind, rettype, sname] = self.get_contents(3)
+
+        # get parameters
+        self.eat("(")
+        params = self.compile_parameter_list()
         self.eat(")")
 
         self.symboltable.start_subroutine()
-        
-        for param in params:                                                  # add parameter names to symbol table as arguments
+
+        # add parameter names to symbol table as arguments
+        for param in params:
             self.symboltable.define(param[1], param[0], "arg")
 
         if skind == "constructor":
             self.new_object()
             self.set_this_base()
-        
+            # self.symboltable.define("this", self.classname, "var")
+
         if skind == "method":
             self.set_this_base()
             self.symboltable.define("this", self.classname, "arg")
 
         self.eat("{")
-        while (self.tokenizer.next_content() not in JACK_STATEMENT_KEYWORDS): # variable declarations
+        while (self.tokenizer.next_content() not in JACK_STATEMENT_KEYWORDS):  # variable declarations
             self.compile_var_dec()
 
         while (self.tokenizer.next_content() != '}'):                         # statements
             self.compile_statement()
 
-        self.eat("}")                                                         # }
-        self.writer.putnow("function " + self.classname + "." + sname + " " + str(self.symboltable.assign_next["var"]))
+        self.eat("}")
+        self.writer.putnow("function " + self.classname + "." +
+                           sname + " " + str(self.symboltable.assign_next["var"]))
         self.writer.flush()
-        
-    def new_object(self): #TODO allocate memory block for new object, leave address on top of stack
-        pass
 
-    def set_this_base(self): # pops address from top of stack into pointer 0
+    def new_object(self):
+        n_fields = self.symboltable.var_count("field")
+        self.writer.push("constant", n_fields)
+        self.writer.call("Memory.alloc", 1)
+
+    def set_this_base(self):  # pops address from top of stack into pointer 0
         self.writer.pop("pointer", 0)
 
     '''returns the list of parameters as a list of lists [vartype, varname]'''
+
     def compile_parameter_list(self):
         params = []
-        while self.tokenizer.next_content() != ')':            
-            params.append(self.get_contents(2))                    # variable type and name
+        while self.tokenizer.next_content() != ')':
+            # variable type and name
+            params.append(self.get_contents(2))
             if self.tokenizer.next_content() != ')':  # ,
-                self.eat(",") 
+                self.eat(",")
         return params
 
-    def compile_var_dec(self):    
+    def compile_var_dec(self):
         [skind, stype, sname] = self.get_contents(3)
-        
-        self.declare_symbol(skind, stype, sname)
-        
+        self.symboltable.define(sname, stype, skind)
+
         while (self.tokenizer.next_content() != ';'):
             self.eat(",")
-            sname = self.get_content() 
-            self.declare_symbol(skind, stype, sname)
-        
-        self.eat(";")
-        
+            sname = self.get_content()
+            self.symboltable.define(sname, stype, skind)
 
-    
+        self.eat(";")
+
     def compile_statement(self):
         assert self.tokenizer.next_content() in JACK_STATEMENT_KEYWORDS
-        
+
         # dispatch to the correct statement compiler
         statement_type = self.tokenizer.next_content()
         if statement_type == "let":
@@ -193,99 +180,108 @@ class CompilationEngine:
         if statement_type == "do":
             self.compile_do_statement()
         if statement_type == "while":
-            self.compile_while_statement()            
+            self.compile_while_statement()
         if statement_type == "if":
             self.compile_if_statement()
         if statement_type == "return":
             self.compile_return_statement()
 
-
-    def compile_let_statement(self): #TODO
+    def compile_let_statement(self):
         self.eat("let")                          # let
         sname = self.get_content()               # variable name
         stype, skind, idx = self.symboltable.get_record(sname).values()
-        
-        if self.tokenizer.next_content() == '[': # possible array idx
+
+        # are we assigning to an array?
+        assign_to_array = self.tokenizer.next_content() == '['
+
+        # then the intermediate temp register is needed to deal with examples like
+        # let a[some_method(4)] = 10 * another_method(b[5]) - 3
+        if assign_to_array:
             self.eat('[')
             self.compile_expression()
-            # pop it to temp 1
+            self.writer.pop("temp", 1)
             self.eat(']')
 
-        self.eat('=')                            # =
+        self.eat('=')
+        # push value X of expression on top of stack
+        self.compile_expression()
 
-        self.compile_expression()                # push value of expression on top of stack
-        self.writer.pop(VM_SEGMENT_NAME[skind], idx) # pop into variable segment of the sname variable
+        if assign_to_array:
+            # find destination address in memory
+            self.writer.push(VM_SEGMENT_NAME[skind], idx)
+            self.writer.push("temp", 1)
+            self.writer.arithmetic("add")
+            # pop this address to the pointer
+            self.writer.pop("pointer", 1)
+            # now pop the value X to that
+            self.writer.pop("that", 0)
+        else:
+            self.writer.pop(VM_SEGMENT_NAME[skind], idx)
 
         self.eat(';')                            # ;
 
-# let a[complicated_expression] = 10 * complicated_method(b[5]) - 3
-
-# look up the segment & idx of a, 
-# this place in memory will contain an address for the beginning of the array a
-
-# compile the expression for the array index that we want to access
-# pop temp 1      -> store that array index in temp 1
-
-# compile the expression on the right hand side
-
-# push segment idx
-# push constant 4
-# add
-# pop pointer 1 -> sets "that" to the right location
-# pop that 0 -> take the computed expression from the stack and put it in "that"
-
-
-
+    def fresh_label(self):
+        self.next_label += 1
+        return "L" + str(self.next_label - 1)
 
     def compile_if_statement(self):
-        self.opentag("ifStatement")
-                                         
         self.eat("if")                              # if
         self.eat("(")                               # (condition)
         self.compile_expression()
         self.eat(")")
 
+        self.writer.arithmetic("not")
+
+        elseblock = self.fresh_label()
+        afterif = self.fresh_label()
+        self.writer.ifgoto(elseblock)
+
         self.eat("{")                               # statement block
         self.compile_statements()
         self.eat("}")
-
-        if self.tokenizer.next_content() == "else": # else
+        self.writer.goto(afterif)
+        
+        self.writer.label(elseblock)
+        if self.tokenizer.next_content() == "else":  # else
             self.eat("else")                        # statement block
             self.eat("{")
             self.compile_statements()
             self.eat("}")
-
-        self.closetag("ifStatement")
+        self.writer.label(afterif)
 
     def compile_do_statement(self):
         self.eat("do")                   # do
-        sname = self.get_content()       # read first identifier        
-        self.compile_call(sname)         # possibly add .identifier2, push parameterlist onto stack and call
-        
-        self.writer.pop("temp", 0)        # dump return value (do statement treats called function as void)
+        sname = self.get_content()       # read first identifier
+        # possibly add .identifier2, push parameterlist onto stack and call
+        self.compile_call(sname)
+
+        # dump return value (do statement treats called function as void)
+        self.writer.pop("temp", 0)
         self.eat(";")                         # ;
-        
 
     """This method gets the full info of a subroutine call, after having read the first name,
     and returns a list containing the full subroutine name, and the number of passed parameters."""
+
     def compile_call(self, firstname):
         fullname = firstname
-        if self.tokenizer.next_content() == '.': 
+        if self.tokenizer.next_content() == '.':
             self.eat(".")                              # .
             secondname = self.get_content()            # read subroutine name
             fullname += "." + secondname
-            if firstname[0].islower(): # in this case we're calling an object method, need to pass that object as first arg
+            # in this case we're calling an object method, need to pass that object as first arg
+            if firstname[0].islower():
                 objkind = self.symboltable.kind_of(firstname)
                 objidx = self.symboltable.idx_of(firstname)
                 self.writer.push(VM_SEGMENT_NAME[objkind], objidx)
-        
+
         self.eat("(")
-        n_params = self.compile_expression_list()   # push expressions for parameters onto stack
+        # push expressions for parameters onto stack
+        n_params = self.compile_expression_list()
         self.eat(")")
         self.writer.call(fullname, n_params)
 
-
     '''Pushes expressions in list onto stack, one by one'''
+
     def compile_expression_list(self):
         n = 0
         while self.tokenizer.next_content() != ')':
@@ -296,32 +292,45 @@ class CompilationEngine:
         return n
 
     def compile_while_statement(self):
-        self.opentag("whileStatement")
+        beginwhile = self.fresh_label()
+        endwhile = self.fresh_label()
+
+        self.writer.label(beginwhile)    # label beginning of while loop
+
         self.eat("while")                # while (condition)
-        self.eat("(")                  
+        self.eat("(")
         self.compile_expression()
         self.eat(")")
+        self.writer.arithmetic("not")    
+        self.writer.ifgoto(endwhile)     # if not (condition), jump to end while
+
         self.eat("{")                    # statement block
         self.compile_statements()
         self.eat("}")
-        self.closetag("whileStatement")
+        self.writer.goto(beginwhile)     # go back to beginwhile
+
+        self.writer.label(endwhile)      # label end of while loop
 
     def compile_statements(self):
-        self.opentag("statements")
         while self.tokenizer.next_content() != '}':
             self.compile_statement()
-        self.closetag("statements")
 
     def compile_return_statement(self):
         self.eat("return")                # return
-        if self.tokenizer.next_content() != ";":
-            self.compile_expression()     # expression
+        if self.tokenizer.next_content() == "this":
+            # "return this" should push pointer 0 (in a constructor)
+            self.writer.push("pointer", 0)
+            self.eat("this")
+        elif self.tokenizer.next_content() == ";":
+            # for a void function, push constant 0 as return value
+            self.writer.push("constant", 0)
         else:
-            self.writer.push("constant", 0) # for a void function, push constant 0 as return value
+            self.compile_expression()     # expression
         self.eat(";")                     # ;
         self.writer.ret()
-        
+
     '''Pushes the result of evaluating the next expression on top of the stack'''
+
     def compile_expression(self):
         # expression is a term, possibly followed by a number of repetitions of (op term)
         self.compile_term()
@@ -332,7 +341,8 @@ class CompilationEngine:
 
     def lookup_and_write(self, sname):
         record = self.symboltable.get_record(sname)
-        self.write_identifier(sname,record["kind"],False,record["type"],record["idx"])
+        self.write_identifier(
+            sname, record["kind"], False, record["type"], record["idx"])
 
     def lookup_and_push(self, sname):
         record = self.symboltable.get_record(sname)
@@ -340,7 +350,8 @@ class CompilationEngine:
         self.writer.push(segment, record["idx"])
 
     '''Pushes the result of evaluating the term on top of the stack'''
-    def compile_term(self):        
+
+    def compile_term(self):
         # first checks:
         # is the term a constant
         if self.tokenizer.next_token.is_constant():
@@ -356,7 +367,7 @@ class CompilationEngine:
             self.eat('(')
             self.compile_expression()
             self.eat(')')
-        
+
         # if we did not succeed yet, then we must be reading an identifier
         # we look ahead to the next symbol, which can be [, (, ., or something else
         else:
@@ -368,10 +379,9 @@ class CompilationEngine:
                 self.compile_expression()
                 self.eat(']')
             # the identifier is part of a subroutine call TODO
-            elif self.tokenizer.next_content() == '.' or self.tokenizer.next_content() == '(': 
+            elif self.tokenizer.next_content() == '.' or self.tokenizer.next_content() == '(':
                 self.compile_call(sname)
             else:
-            # if we are in none of these cases, then the identifier must have been a simple varname, 
-            # so we look it up and push it to the stack
+                # if we are in none of these cases, then the identifier must have been a simple varname,
+                # so we look it up and push it to the stack
                 self.lookup_and_push(sname)
-                
