@@ -127,8 +127,10 @@ class CompilationEngine:
             # self.symboltable.define("this", self.classname, "var")
 
         if skind == "method":
-            self.set_this_base()
+            # self.set_this_base() -> was a bug, method already has "this" as argument, don't set base.
             self.symboltable.define("this", self.classname, "arg")
+            self.writer.push("argument", 0)
+            self.writer.pop("pointer", 0)     # set the "this" pointer to argument 0
 
         self.eat("{")
         while (self.tokenizer.next_content() not in JACK_STATEMENT_KEYWORDS):  # variable declarations
@@ -261,31 +263,38 @@ class CompilationEngine:
         self.writer.pop("temp", 0)
         self.eat(";")                         # ;
 
-    """This method gets the full info of a subroutine call, after having read the first name,
-    and returns a list containing the full subroutine name, and the number of passed parameters."""
-
+    """compile_call gets the full info of a subroutine call, after having read the first name,
+    and writes the parameters and then the call command."""
     def compile_call(self, firstname):
         
-        if self.tokenizer.next_content() == '.':
+        n_params = 0
+        if self.tokenizer.next_content() == '.':       # CASE 1: firstname.secondname
             self.eat(".")                              # .
             secondname = self.get_content()            # read subroutine name
-            fullname = firstname + "." + secondname
-            # in this case we're calling an object method, need to pass that object as first arg
-            if firstname[0].islower():
+            
+            if firstname[0].islower():                 # CASE 1a: firstname = identifier of some object instance, secondname = method
+                # pass that instance as first argument
                 objkind = self.symboltable.kind_of(firstname)
                 objidx = self.symboltable.idx_of(firstname)
                 self.writer.push(VM_SEGMENT_NAME[objkind], objidx)
-        else:
-            fullname = self.classname + "." + firstname     # bug fix: need to explicitly add the class name when calling subroutine from this class
+                n_params = 1
+                # and need to call the method from that class
+                fullname = self.symboltable.type_of(firstname) + "." + secondname
+            else:                                       # CASE 1b: firstname = class name, secondname = function name
+                fullname = firstname + "." + secondname
+        else:                                           # CASE 2: firstname only, then the callee must be a method (!) from this class
+            fullname = self.classname + "." + firstname   
+            # pass "this" as first argument
+            self.writer.push("pointer", 0)
+            n_params = 1
 
         self.eat("(")
-        # push expressions for parameters onto stack
-        n_params = self.compile_expression_list()
+        # push expressions for explicit parameters onto stack
+        n_params += self.compile_expression_list()
         self.eat(")")
         self.writer.call(fullname, n_params)
 
-    '''Pushes expressions in list onto stack, one by one'''
-
+    '''compile_expression pushes expressions in list onto stack, one by one'''
     def compile_expression_list(self):
         n = 0
         while self.tokenizer.next_content() != ')':

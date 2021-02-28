@@ -8,11 +8,13 @@ push argument 1
 pop this 1
 push argument 2
 pop this 2
-call draw 0
+push pointer 0
+call Square.draw 1
 pop temp 0
 push pointer 0
 return
 function Square.dispose 0
+push argument 0
 pop pointer 0
 push pointer 0
 call Memory.deAlloc 1
@@ -20,6 +22,7 @@ pop temp 0
 push constant 0
 return
 function Square.draw 0
+push argument 0
 pop pointer 0
 push constant 0
 not
@@ -38,6 +41,7 @@ pop temp 0
 push constant 0
 return
 function Square.erase 0
+push argument 0
 pop pointer 0
 push constant 0
 call Screen.setColor 1
@@ -55,6 +59,7 @@ pop temp 0
 push constant 0
 return
 function Square.incSize 0
+push argument 0
 pop pointer 0
 push this 1
 push this 2
@@ -69,13 +74,15 @@ lt
 and
 not
 if-goto L1
-call erase 0
+push pointer 0
+call Square.erase 1
 pop temp 0
 push this 2
 push constant 2
 add
 pop this 2
-call draw 0
+push pointer 0
+call Square.draw 1
 pop temp 0
 goto L2
 label L1
@@ -83,19 +90,22 @@ label L2
 push constant 0
 return
 function Square.decSize 0
+push argument 0
 pop pointer 0
 push this 2
 push constant 2
 gt
 not
 if-goto L3
-call erase 0
+push pointer 0
+call Square.erase 1
 pop temp 0
 push this 2
 push constant 2
 sub
 pop this 2
-call draw 0
+push pointer 0
+call Square.draw 1
 pop temp 0
 goto L4
 label L3
@@ -103,6 +113,7 @@ label L4
 push constant 0
 return
 function Square.moveUp 0
+push argument 0
 pop pointer 0
 push this 1
 push constant 1
@@ -150,6 +161,7 @@ label L6
 push constant 0
 return
 function Square.moveDown 0
+push argument 0
 pop pointer 0
 push this 1
 push this 2
@@ -199,6 +211,7 @@ label L8
 push constant 0
 return
 function Square.moveLeft 0
+push argument 0
 pop pointer 0
 push this 0
 push constant 1
@@ -246,6 +259,7 @@ label L10
 push constant 0
 return
 function Square.moveRight 0
+push argument 0
 pop pointer 0
 push this 0
 push this 2
