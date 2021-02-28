@@ -32,15 +32,10 @@ class CompilationEngine:
 
         self.next_label = 1
 
-
     def eat(self, s):
         for word in s.split(" "):
             if self.tokenizer.next_content() != word:
                 raise ValueError(self.get_error(word))
-            self.tokenizer.advance()
-
-    def next_terminals(self, n):
-        for i in range(0, n):
             self.tokenizer.advance()
 
     def get_contents(self, n):
@@ -62,13 +57,6 @@ class CompilationEngine:
             self.tokenizer.next_content() + \
             " on line " + str(self.tokenizer.current_line)
 
-    # adds current Jack code line as a comment to buffer
-    def commentline(self):
-        self.writer.comment(self.tokenizer.getline())
-    
-    def commentlinenow(self):
-        self.writer.commentnow(self.tokenizer.getline())
-
     def compile_class(self):
         self.symboltable = SymbolTable()
         self.eat("class")                       # class
@@ -86,10 +74,6 @@ class CompilationEngine:
 
         self.eat("}")                            # }
 
-
-        # record = self.symboltable.get_record(sname)
-        # self.write_identifier(sname, record["kind"], True, record["type"], record["idx"])
-
     def compile_class_var_dec(self):  # class variable declaration
         if not (self.tokenizer.next_content() == "static" or self.tokenizer.next_content() == "field"):
             raise ValueError("Expected static or field, but found " + self.tokenizer.next_content())
@@ -106,31 +90,26 @@ class CompilationEngine:
         self.eat(";")
 
     def compile_subroutine_dec(self):
-        # subroutine kind, return type, name
-        [skind, rettype, sname] = self.get_contents(3)
+        [skind, rettype, sname] = self.get_contents(3)          # subroutine kind, return type, name
 
         self.symboltable.start_subroutine()
 
         if skind == "constructor":
-            self.new_object()
-            self.set_this_base()
+            n_fields = self.symboltable.var_count("field")
+            self.writer.push("constant", n_fields)
+            self.writer.call("Memory.alloc", 1)
+            self.writer.pop("pointer", 0)                       # pops address from top of stack into pointer 0
 
         if skind == "method":
             self.symboltable.define("this", self.classname, "arg")
             self.writer.push("argument", 0)
-            self.writer.pop("pointer", 0)     # set the "this" pointer to argument 0
+            self.writer.pop("pointer", 0)                       # set the "this" pointer to argument 0
 
         # get parameters
         self.eat("(")
         params = self.compile_parameter_list()
         self.eat(")")
-
-
-        # add parameter names to symbol table as arguments
-        for param in params:
-            self.symboltable.define(param[1], param[0], "arg")
-
-
+            
         if sname in SUBROUTINES_TO_DEBUG:
             print("current subroutine: " + sname)
             self.symboltable.diagnostics()
@@ -147,24 +126,13 @@ class CompilationEngine:
                            sname + " " + str(self.symboltable.assign_next["var"]))
         self.writer.flush()
 
-    def new_object(self):
-        n_fields = self.symboltable.var_count("field")
-        self.writer.push("constant", n_fields)
-        self.writer.call("Memory.alloc", 1)
-
-    def set_this_base(self):  # pops address from top of stack into pointer 0
-        self.writer.pop("pointer", 0)
-
-    '''returns the list of parameters as a list of lists [vartype, varname]'''
-
+    '''compile_parameter_list adds parameter names to symbol table'''
     def compile_parameter_list(self):
-        params = []
         while self.tokenizer.next_content() != ')':
-            # variable type and name
-            params.append(self.get_contents(2))
-            if self.tokenizer.next_content() != ')':  # ,
+            param = self.get_contents(2)
+            self.symboltable.define(param[1], param[0], "arg")
+            if self.tokenizer.next_content() != ')':  
                 self.eat(",")
-        return params
 
     def compile_var_dec(self):
         [skind, stype, sname] = self.get_contents(3)
@@ -178,7 +146,8 @@ class CompilationEngine:
         self.eat(";")
 
     def compile_statement(self):
-        assert self.tokenizer.next_content() in JACK_STATEMENT_KEYWORDS
+        if self.tokenizer.next_content() not in JACK_STATEMENT_KEYWORDS:
+            raise ValueError("Expected keyword, found: " + self.tokenizer.next_content())
 
         # dispatch to the correct statement compiler
         statement_type = self.tokenizer.next_content()
@@ -345,8 +314,7 @@ class CompilationEngine:
         self.eat(";")                     # ;
         self.writer.ret()
 
-    '''Pushes the result of evaluating the next expression on top of the stack'''
-
+    '''compile_expression pushes the result of evaluating the next expression on top of the stack'''
     def compile_expression(self):
         # expression is a term, possibly followed by a number of repetitions of (op term)
         self.compile_term()
@@ -360,7 +328,7 @@ class CompilationEngine:
         segment = VM_SEGMENT_NAME[record["kind"]]
         self.writer.push(segment, record["idx"])
 
-    """Creates a new string constant containing "content"
+    """create_string asks OS to create a new string constant containing "content"
     and pushes its address on top of the stack"""
     def create_string(self, content):
         # tell OS to create a new string of len(content) characters
