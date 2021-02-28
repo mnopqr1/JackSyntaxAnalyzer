@@ -20,6 +20,8 @@ JACK_UNARY_OP = "-~"
 JACK_BINARY_OP = "+-*/&|<>="
 INDENT_SIZE = 2
 
+SUBROUTINES_TO_DEBUG = [] # set this to a subroutine name (without classname. ) to show symboltable when compiling it
+
 
 class CompilationEngine:
     # constructor
@@ -107,30 +109,31 @@ class CompilationEngine:
         # subroutine kind, return type, name
         [skind, rettype, sname] = self.get_contents(3)
 
+        self.symboltable.start_subroutine()
+
+        if skind == "constructor":
+            self.new_object()
+            self.set_this_base()
+
+        if skind == "method":
+            self.symboltable.define("this", self.classname, "arg")
+            self.writer.push("argument", 0)
+            self.writer.pop("pointer", 0)     # set the "this" pointer to argument 0
+
         # get parameters
         self.eat("(")
         params = self.compile_parameter_list()
         self.eat(")")
 
-        self.symboltable.start_subroutine()
 
         # add parameter names to symbol table as arguments
         for param in params:
             self.symboltable.define(param[1], param[0], "arg")
 
-        # print("current subroutine: " + sname)
-        # self.symboltable.diagnostics()
 
-        if skind == "constructor":
-            self.new_object()
-            self.set_this_base()
-            # self.symboltable.define("this", self.classname, "var")
-
-        if skind == "method":
-            # self.set_this_base() -> was a bug, method already has "this" as argument, don't set base.
-            self.symboltable.define("this", self.classname, "arg")
-            self.writer.push("argument", 0)
-            self.writer.pop("pointer", 0)     # set the "this" pointer to argument 0
+        if sname in SUBROUTINES_TO_DEBUG:
+            print("current subroutine: " + sname)
+            self.symboltable.diagnostics()
 
         self.eat("{")
         while (self.tokenizer.next_content() not in JACK_STATEMENT_KEYWORDS):  # variable declarations
