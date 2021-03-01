@@ -1,0 +1,371 @@
+function Alien.draw 0
+push argument 0
+push constant 3
+add
+push argument 1
+push constant 0
+add
+call Screen.drawPixel 2
+pop temp 0
+push argument 0
+push constant 9
+add
+push argument 1
+push constant 0
+add
+call Screen.drawPixel 2
+pop temp 0
+push argument 0
+push constant 4
+add
+push argument 1
+push constant 1
+add
+call Screen.drawPixel 2
+pop temp 0
+push argument 0
+push constant 8
+add
+push argument 1
+push constant 1
+add
+call Screen.drawPixel 2
+pop temp 0
+push argument 0
+push constant 3
+add
+push argument 1
+push constant 2
+add
+call Screen.drawPixel 2
+pop temp 0
+push argument 0
+push constant 4
+add
+push argument 1
+push constant 2
+add
+call Screen.drawPixel 2
+pop temp 0
+push argument 0
+push constant 5
+add
+push argument 1
+push constant 2
+add
+call Screen.drawPixel 2
+pop temp 0
+push argument 0
+push constant 6
+add
+push argument 1
+push constant 2
+add
+call Screen.drawPixel 2
+pop temp 0
+push argument 0
+push constant 7
+add
+push argument 1
+push constant 2
+add
+call Screen.drawPixel 2
+pop temp 0
+push argument 0
+push constant 8
+add
+push argument 1
+push constant 2
+add
+call Screen.drawPixel 2
+pop temp 0
+push argument 0
+push constant 9
+add
+push argument 1
+push constant 2
+add
+call Screen.drawPixel 2
+pop temp 0
+push argument 0
+push constant 2
+add
+push argument 1
+push constant 3
+add
+call Screen.drawPixel 2
+pop temp 0
+push argument 0
+push constant 3
+add
+push argument 1
+push constant 3
+add
+call Screen.drawPixel 2
+pop temp 0
+push argument 0
+push constant 5
+add
+push argument 1
+push constant 3
+add
+call Screen.drawPixel 2
+pop temp 0
+push argument 0
+push constant 6
+add
+push argument 1
+push constant 3
+add
+call Screen.drawPixel 2
+pop temp 0
+push argument 0
+push constant 7
+add
+push argument 1
+push constant 3
+add
+call Screen.drawPixel 2
+pop temp 0
+push argument 0
+push constant 9
+add
+push argument 1
+push constant 3
+add
+call Screen.drawPixel 2
+pop temp 0
+push argument 0
+push constant 10
+add
+push argument 1
+push constant 3
+add
+call Screen.drawPixel 2
+pop temp 0
+push argument 0
+push constant 1
+add
+push argument 1
+push constant 4
+add
+call Screen.drawPixel 2
+pop temp 0
+push argument 0
+push constant 2
+add
+push argument 1
+push constant 4
+add
+call Screen.drawPixel 2
+pop temp 0
+push argument 0
+push constant 3
+add
+push argument 1
+push constant 4
+add
+call Screen.drawPixel 2
+pop temp 0
+push argument 0
+push constant 4
+add
+push argument 1
+push constant 4
+add
+call Screen.drawPixel 2
+pop temp 0
+push argument 0
+push constant 5
+add
+push argument 1
+push constant 4
+add
+call Screen.drawPixel 2
+pop temp 0
+push argument 0
+push constant 6
+add
+push argument 1
+push constant 4
+add
+call Screen.drawPixel 2
+pop temp 0
+push argument 0
+push constant 7
+add
+push argument 1
+push constant 4
+add
+call Screen.drawPixel 2
+pop temp 0
+push argument 0
+push constant 8
+add
+push argument 1
+push constant 4
+add
+call Screen.drawPixel 2
+pop temp 0
+push argument 0
+push constant 9
+add
+push argument 1
+push constant 4
+add
+call Screen.drawPixel 2
+pop temp 0
+push argument 0
+push constant 10
+add
+push argument 1
+push constant 4
+add
+call Screen.drawPixel 2
+pop temp 0
+push argument 0
+push constant 11
+add
+push argument 1
+push constant 4
+add
+call Screen.drawPixel 2
+pop temp 0
+push argument 0
+push constant 1
+add
+push argument 1
+push constant 5
+add
+call Screen.drawPixel 2
+pop temp 0
+push argument 0
+push constant 3
+add
+push argument 1
+push constant 5
+add
+call Screen.drawPixel 2
+pop temp 0
+push argument 0
+push constant 4
+add
+push argument 1
+push constant 5
+add
+call Screen.drawPixel 2
+pop temp 0
+push argument 0
+push constant 5
+add
+push argument 1
+push constant 5
+add
+call Screen.drawPixel 2
+pop temp 0
+push argument 0
+push constant 6
+add
+push argument 1
+push constant 5
+add
+call Screen.drawPixel 2
+pop temp 0
+push argument 0
+push constant 7
+add
+push argument 1
+push constant 5
+add
+call Screen.drawPixel 2
+pop temp 0
+push argument 0
+push constant 8
+add
+push argument 1
+push constant 5
+add
+call Screen.drawPixel 2
+pop temp 0
+push argument 0
+push constant 9
+add
+push argument 1
+push constant 5
+add
+call Screen.drawPixel 2
+pop temp 0
+push argument 0
+push constant 11
+add
+push argument 1
+push constant 5
+add
+call Screen.drawPixel 2
+pop temp 0
+push argument 0
+push constant 1
+add
+push argument 1
+push constant 6
+add
+call Screen.drawPixel 2
+pop temp 0
+push argument 0
+push constant 3
+add
+push argument 1
+push constant 6
+add
+call Screen.drawPixel 2
+pop temp 0
+push argument 0
+push constant 9
+add
+push argument 1
+push constant 6
+add
+call Screen.drawPixel 2
+pop temp 0
+push argument 0
+push constant 11
+add
+push argument 1
+push constant 6
+add
+call Screen.drawPixel 2
+pop temp 0
+push argument 0
+push constant 4
+add
+push argument 1
+push constant 7
+add
+call Screen.drawPixel 2
+pop temp 0
+push argument 0
+push constant 5
+add
+push argument 1
+push constant 7
+add
+call Screen.drawPixel 2
+pop temp 0
+push argument 0
+push constant 7
+add
+push argument 1
+push constant 7
+add
+call Screen.drawPixel 2
+pop temp 0
+push argument 0
+push constant 8
+add
+push argument 1
+push constant 7
+add
+call Screen.drawPixel 2
+pop temp 0
+push constant 0
+return

@@ -1,0 +1,61 @@
+class Ship {
+    field int x, y;
+    field int width, height;
+    field int direction;
+
+    constructor Ship new() {
+        let x = 230;
+        let y = 230;
+        let width = 50;
+        let height = 10;
+        let direction = 0;
+        do show();
+        return this;
+    }
+
+    method void show() {
+        do Screen.setColor(true);
+        do draw();
+        return;
+    }
+
+    method void hide() {
+        do Screen.setColor(false);
+        do draw();
+        return;
+    }
+
+    method void draw() {
+        do Screen.drawRectangle(x, y, x + width, y + height);
+        do Screen.drawRectangle(x + (width / 2) - 5, y - (2 * height), x + (width / 2) + 5, y); 
+        return;
+    }
+
+    method void setDirection(int d) {
+        let direction = d;
+        return;
+    }
+
+    method void move() {
+        do hide();
+        if (direction = 1) {
+            let x = x - 4;
+            if (x < 0) { let x = 0; }
+        }
+        if (direction = 2) {
+            let x = x + 4;
+            if (x + width > 511) { let x = 511 - width; }
+        }
+        do show();
+        return;
+    }
+
+    method int getGunX() {
+        return x + (width / 2);
+    }
+
+    method int getGunY() {
+        return y - (2 * height);
+    }
+
+}

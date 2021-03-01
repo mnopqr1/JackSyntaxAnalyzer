@@ -1,0 +1,124 @@
+class Enemy {
+    
+    field Array xs, ys, visible;
+    static int N;
+    static int speed;
+
+    field int direction;
+    field int timer;
+
+    constructor Enemy new() {
+        var int i;
+        var int newx;
+        var int newy;
+
+        let N = 32;
+        let speed = 5;
+
+        let xs = Array.new(N);
+        let ys = Array.new(N);
+        let visible = Array.new(N);
+        let timer = 0;
+
+        let newx = 50;
+        let newy = 20;
+        let i = 0;
+        let direction = 1;
+        
+        while (i < N) {
+            let xs[i] = newx;
+            let ys[i] = newy;
+            let visible[i] = true;
+            let newx = newx + 20;
+
+            if (newx > 200) {
+                let newx = 50;
+                let newy = newy + 20; 
+            }
+            
+            let i = i + 1;
+        }
+        do show();
+        return this;
+    }
+
+    method void show() {
+        do Screen.setColor(true);
+        do draw();
+        return;
+    }
+
+    method void hide() {
+        do Screen.setColor(false);
+        do draw();
+        return;
+    }
+    method void draw() {
+        var int i;
+        let i = 0;
+        while (i < N) {
+            if (visible[i]) {
+                do Alien.draw(xs[i], ys[i]);
+            }
+            let i = i + 1;
+        }
+        return;
+    }
+
+    method void move() {
+        var int i;
+        var boolean descend;
+
+        let timer = timer + 1;
+
+        if (timer = speed) {
+            let timer = 0;
+            do hide();
+            let i = 0;
+            let descend = mustDescend();
+            if (descend) {
+                let direction = -1 * direction;
+            }
+            while (i < N) {
+                if (descend) {
+                    let ys[i] = ys[i] + 20;
+                }
+                let xs[i] = xs[i] + (direction * 4);
+                
+                let i = i + 1;
+            }
+            do show();
+        }
+        return;
+
+    }
+
+    method boolean mustDescend() {
+        var int i;
+        while (i < N) {
+            if (xs[i] > 400 | (xs[i] < 50)) {
+                return true;
+            }
+            let i = i + 1;
+        }
+        return false;
+    }
+
+    function boolean isHit(int xShot, int yShot, int xA, int yA) {
+        return false;
+    }
+    method boolean handleShot(int x, int y) {
+        /** var int i;
+        while (i < N) {
+            if (isHit(x,y,xs[i],ys[i])) {
+                let visible[i] = false;
+                return true;
+            }
+            let i = i + 1;
+        } */
+        return false;
+    }
+    
+
+
+}

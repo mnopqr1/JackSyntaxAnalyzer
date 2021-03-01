@@ -1,0 +1,163 @@
+function Ship.new 0
+push constant 5
+call Memory.alloc 1
+pop pointer 0
+push constant 230
+pop this 0
+push constant 230
+pop this 1
+push constant 50
+pop this 2
+push constant 10
+pop this 3
+push constant 0
+pop this 4
+push pointer 0
+call Ship.show 1
+pop temp 0
+push pointer 0
+return
+function Ship.show 0
+push argument 0
+pop pointer 0
+push constant 0
+not
+call Screen.setColor 1
+pop temp 0
+push pointer 0
+call Ship.draw 1
+pop temp 0
+push constant 0
+return
+function Ship.hide 0
+push argument 0
+pop pointer 0
+push constant 0
+call Screen.setColor 1
+pop temp 0
+push pointer 0
+call Ship.draw 1
+pop temp 0
+push constant 0
+return
+function Ship.draw 0
+push argument 0
+pop pointer 0
+push this 0
+push this 1
+push this 0
+push this 2
+add
+push this 1
+push this 3
+add
+call Screen.drawRectangle 4
+pop temp 0
+push this 0
+push this 2
+push constant 2
+call Math.divide 2
+add
+push constant 5
+sub
+push this 1
+push constant 2
+push this 3
+call Math.multiply 2
+sub
+push this 0
+push this 2
+push constant 2
+call Math.divide 2
+add
+push constant 5
+add
+push this 1
+call Screen.drawRectangle 4
+pop temp 0
+push constant 0
+return
+function Ship.setDirection 0
+push argument 0
+pop pointer 0
+push argument 1
+pop this 4
+push constant 0
+return
+function Ship.move 0
+push argument 0
+pop pointer 0
+push pointer 0
+call Ship.hide 1
+pop temp 0
+push this 4
+push constant 1
+eq
+not
+if-goto L1
+push this 0
+push constant 4
+sub
+pop this 0
+push this 0
+push constant 0
+lt
+not
+if-goto L3
+push constant 0
+pop this 0
+goto L4
+label L3
+label L4
+goto L2
+label L1
+label L2
+push this 4
+push constant 2
+eq
+not
+if-goto L5
+push this 0
+push constant 4
+add
+pop this 0
+push this 0
+push this 2
+add
+push constant 511
+gt
+not
+if-goto L7
+push constant 511
+push this 2
+sub
+pop this 0
+goto L8
+label L7
+label L8
+goto L6
+label L5
+label L6
+push pointer 0
+call Ship.show 1
+pop temp 0
+push constant 0
+return
+function Ship.getGunX 0
+push argument 0
+pop pointer 0
+push this 0
+push this 2
+push constant 2
+call Math.divide 2
+add
+return
+function Ship.getGunY 0
+push argument 0
+pop pointer 0
+push this 1
+push constant 2
+push this 3
+call Math.multiply 2
+sub
+return

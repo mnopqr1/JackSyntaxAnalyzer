@@ -1,0 +1,292 @@
+function Shots.new 1
+push constant 5
+call Memory.alloc 1
+pop pointer 0
+push constant 0
+pop static 1
+push constant 10
+pop static 0
+push static 0
+call Array.new 1
+pop this 0
+push static 0
+call Array.new 1
+pop this 1
+push static 0
+call Array.new 1
+pop this 2
+label L1
+push local 0
+push static 0
+lt
+not
+if-goto L2
+push local 0
+pop temp 1
+push constant 0
+push this 2
+push temp 1
+add
+pop pointer 1
+pop that 0
+push local 0
+push constant 1
+add
+pop local 0
+goto L1
+label L2
+push constant 5
+pop this 3
+push constant 5
+pop this 4
+push pointer 0
+return
+function Shots.show 0
+push argument 0
+pop pointer 0
+push constant 0
+not
+call Screen.setColor 1
+pop temp 0
+push pointer 0
+call Shots.draw 1
+pop temp 0
+push constant 0
+return
+function Shots.hide 0
+push argument 0
+pop pointer 0
+push constant 0
+call Screen.setColor 1
+pop temp 0
+push pointer 0
+call Shots.draw 1
+pop temp 0
+push constant 0
+return
+function Shots.draw 1
+push argument 0
+pop pointer 0
+push constant 0
+pop local 0
+label L3
+push local 0
+push static 0
+lt
+not
+if-goto L4
+push local 0
+push this 2
+add
+pop pointer 1
+push that 0
+not
+if-goto L5
+push local 0
+push this 0
+add
+pop pointer 1
+push that 0
+push local 0
+push this 1
+add
+pop pointer 1
+push that 0
+push local 0
+push this 0
+add
+pop pointer 1
+push that 0
+push this 3
+add
+push local 0
+push this 1
+add
+pop pointer 1
+push that 0
+push this 4
+add
+call Screen.drawRectangle 4
+pop temp 0
+goto L6
+label L5
+label L6
+push local 0
+push constant 1
+add
+pop local 0
+goto L3
+label L4
+push constant 0
+return
+function Shots.move 1
+push argument 0
+pop pointer 0
+push pointer 0
+call Shots.hide 1
+pop temp 0
+push constant 0
+pop local 0
+label L7
+push local 0
+push static 0
+lt
+not
+if-goto L8
+push local 0
+pop temp 1
+push local 0
+push this 1
+add
+pop pointer 1
+push that 0
+push constant 4
+sub
+push this 1
+push temp 1
+add
+pop pointer 1
+pop that 0
+push local 0
+push this 1
+add
+pop pointer 1
+push that 0
+push constant 0
+lt
+not
+if-goto L9
+push local 0
+pop temp 1
+push constant 0
+push this 1
+push temp 1
+add
+pop pointer 1
+pop that 0
+push local 0
+pop temp 1
+push constant 0
+push this 2
+push temp 1
+add
+pop pointer 1
+pop that 0
+goto L10
+label L9
+label L10
+push local 0
+push constant 1
+add
+pop local 0
+goto L7
+label L8
+push pointer 0
+call Shots.show 1
+pop temp 0
+push constant 0
+return
+function Shots.addShot 1
+push argument 0
+pop pointer 0
+label L11
+push local 0
+push this 2
+add
+pop pointer 1
+push that 0
+push local 0
+push static 0
+lt
+and
+not
+if-goto L12
+push local 0
+push constant 1
+add
+pop local 0
+goto L11
+label L12
+push local 0
+pop temp 1
+push argument 1
+push this 0
+push temp 1
+add
+pop pointer 1
+pop that 0
+push local 0
+pop temp 1
+push argument 2
+push this 1
+push temp 1
+add
+pop pointer 1
+pop that 0
+push local 0
+pop temp 1
+push constant 0
+not
+push this 2
+push temp 1
+add
+pop pointer 1
+pop that 0
+push constant 0
+return
+function Shots.start 0
+push argument 0
+pop pointer 0
+push constant 0
+pop static 1
+push constant 0
+return
+function Shots.hasNext 0
+push argument 0
+pop pointer 0
+label L13
+push static 1
+push this 2
+add
+pop pointer 1
+push that 0
+not
+not
+if-goto L14
+push static 1
+push constant 1
+add
+pop static 1
+push static 1
+push static 0
+eq
+not
+if-goto L15
+push constant 0
+return
+goto L16
+label L15
+label L16
+goto L13
+label L14
+push constant 0
+not
+return
+function Shots.nextShotX 0
+push argument 0
+pop pointer 0
+push static 1
+push this 0
+add
+pop pointer 1
+push that 0
+return
+function Shots.nextShotY 0
+push argument 0
+pop pointer 0
+push static 1
+push this 1
+add
+pop pointer 1
+push that 0
+return

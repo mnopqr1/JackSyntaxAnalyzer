@@ -1,0 +1,94 @@
+class Shots {
+    field Array xs, ys, visible;
+    field int width, height;
+    static int M; // max number of shots
+    static int iterator;
+
+    constructor Shots new() {
+        var int i;
+        let iterator = 0;
+        let M = 10;
+        let xs = Array.new(M);
+        let ys = Array.new(M);
+        let visible = Array.new(M);
+        while (i < M) {
+            let visible[i] = false;
+            let i = i + 1;
+        }
+        let width = 5;
+        let height = 5;
+        return this;
+    }
+
+    method void show() {
+        do Screen.setColor(true);
+        do draw();
+        return;
+    }
+
+    method void hide() {
+        do Screen.setColor(false);
+        do draw();
+        return;
+    }
+
+    method void draw() {
+        var int i;
+        let i = 0;
+        while ((i < M)) {
+            if (visible[i]) {
+                do Screen.drawRectangle(xs[i], ys[i], xs[i] + width, ys[i] + height);
+            }
+            let i = i + 1;
+        }
+        return;
+    }
+
+    method void move() {
+        var int i;
+        do hide();
+        let i = 0;
+        while (i < M) {
+            let ys[i] = ys[i] - 4;
+            if (ys[i] < 0) {
+                let ys[i] = 0;
+                let visible[i] = false;
+            }
+            let i = i + 1;
+        }
+        do show();
+        return;
+    }
+
+    method void addShot(int x, int y) {
+        var int i;
+        while (visible[i] & (i < M)) { 
+            let i = i + 1; 
+        }
+        let xs[i] = x;
+        let ys[i] = y;
+        let visible[i] = true;
+        return;
+    }
+
+    method void start() {
+        let iterator = 0;
+        return;
+    }
+
+    method boolean hasNext() {
+        while (~visible[iterator]) {
+            let iterator = iterator + 1;
+            if (iterator = M) { return false; }
+        }
+        return true;
+    }
+
+    method int nextShotX() {
+        return xs[iterator];
+    }
+    method int nextShotY() {
+        return ys[iterator];
+    }
+
+}
